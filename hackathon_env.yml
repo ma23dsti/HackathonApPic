@@ -1,0 +1,10 @@
+name: hackathon_env
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - flask
+  - numpy
+  - pandas
+  - streamlit
+  - matplotlib
