@@ -1,4 +1,7 @@
 import streamlit as st
+from menu import display_menu
+
+display_menu()
 
 def show():
     st.title("À propos")

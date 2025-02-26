@@ -1,6 +1,9 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
+from menu import display_menu
+
+display_menu()
 
 def show():
     st.title("Dépot et Validation des Données")
@@ -8,23 +11,30 @@ def show():
 
     # Espace de dépôt des données
     uploaded_file = st.file_uploader("Déposez vos fichiers ici", type=["csv", "txt"])
-    
+
     if uploaded_file is not None:
-        input_data = pd.read_csv(uploaded_file)
-        st.write("Données d'entrée:", input_data)
+        try:
+            input_data = pd.read_csv(uploaded_file)
+            st.write("Affichage des données d'entrée pour la prédiction :", input_data)
+        except Exception as e:
+            st.error(f"Erreur lors de la lecture du fichier : {e}")
+            input_data = None
     else:
         # Dummy input data for testing
         input_data = np.random.rand(1, 60)
-        st.write("Données d'entrée:", input_data)
+        st.write("Affichage des données d'entrée pour la prédiction :", input_data)
 
-    if st.button("Valider"):
-        # Dummy validation logic
-        if np.any(np.isnan(input_data)):
-            st.write("Erreur: Les données contiennent des valeurs manquantes.")
-        elif np.any(input_data < 0):
-            st.write("Erreur: Les données contiennent des valeurs négatives.")
+    if st.button("Validation des données"):
+        if input_data is not None:
+            # Validation des données
+            if np.any(np.isnan(input_data)):
+                st.error("Erreur: Les données contiennent des valeurs manquantes.")
+            elif np.any(input_data < 0):
+                st.error("Erreur: Les données contiennent des valeurs négatives.")
+            else:
+                st.success("Les données sont valides.")
         else:
-            st.write("Les données sont valides.")
+            st.error("Erreur: Aucun fichier n'a été téléchargé.")
 
 if __name__ == "__main__":
     show()
