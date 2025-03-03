@@ -123,7 +123,7 @@ def preprocess_data(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shap
 
         # On rajoute nos nouvelles données à notre dataframe
         new_df = pd.DataFrame(new_data)
-        data = pd.concat([df, new_df], ignore_index=True)
+        df = pd.concat([df, new_df], ignore_index=True)
 
     df = df.sort_values("Time").reset_index(drop=True)
     print("Imputation terminé")
