@@ -3,11 +3,15 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from menu import display_menu
+from dependency_manager import check_dependencies
 
 display_menu()
 
 def show():
     st.title("Statistiques")
+
+    check_dependencies("Statistiques")
+
     st.write("Affichage des statistiques du modèle.")
 
     # Dummy statistics for testing
@@ -50,6 +54,8 @@ def show():
     }
     df = pd.DataFrame(data)
     st.dataframe(df)  # Utilisation de st.dataframe pour afficher le tableau
+
+    st.session_state.valid_statistiques = True
 
 if __name__ == "__main__":
     show()

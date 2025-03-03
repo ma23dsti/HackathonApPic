@@ -21,8 +21,8 @@ def show():
     # Question pour l'utilisateur
     choix_modele_options = {
         "Prédire avec le modèle pré-chargé": 0,
-        "Entrainer un modèle et faire une prédiction": 1,
-        "Prédire avec un modèle externe à charger sur la plateforme": 2
+        "Entrainer un modèle et faire une prédiction": 1#,
+    #   "Prédire avec un modèle externe à charger sur la plateforme": 2
     }
 
     st.markdown(
@@ -44,16 +44,16 @@ def show():
     # Options avec alias pour la taille de la fenêtre
     # Ajouter les autres options dans ce dictionnaire
     taille_fenetre_options = {
-        "60 secondes": 60,
-        "90 secondes": 90 # valeur test pour l'affichage
+        "60 secondes": 60#,
+        #"90 secondes": 90 # valeur test pour l'affichage
     }
     taille_fenetre = st.selectbox("Taille de la fenêtre", options=list(taille_fenetre_options.keys()), index=None, placeholder="Choisis une option")
 
     # Options avec alias pour le nombre de prédictions
     # Ajouter les autres options dans ce dictionnaire
     nombre_predictions_options = {
-        "5 prédictions": 5,
-        "20 prédictions": 20 # valeur test pour l'affichage
+        "5 prédictions": 5#,
+        #"20 prédictions": 20 # valeur test pour l'affichage
     }
     nombre_predictions = st.selectbox("Nombre de prédictions", options=list(nombre_predictions_options.keys()), index=None, placeholder="Choisis une option")
 
@@ -69,6 +69,7 @@ def show():
             st.session_state['choix_modele'] = choix_modele_options[choix_modele]
             st.session_state['taille_fenetre'] = taille_fenetre_options[taille_fenetre]
             st.session_state['nombre_predictions'] = nombre_predictions_options[nombre_predictions]
+            st.session_state.valid_acceuil = True
             st.rerun()
 
     st.markdown("""---""")
@@ -76,16 +77,25 @@ def show():
 if __name__ == "__main__":
 
     # Initialiser st.session_state sinon display_menu() ne fonctionnera pas
-    if 'choix_modele' not in st.session_state:
-        st.session_state['choix_modele'] = None
-    if 'taille_fenetre' not in st.session_state:
-        st.session_state['taille_fenetre'] = None
-    if 'nombre_predictions' not in st.session_state:
-        st.session_state['nombre_predictions'] = None
+    # Liste des clés à initialiser
+    key_user_choices = ['choix_modele', 'taille_fenetre', 'nombre_predictions']
+    keys_to_initialize = ['valid_acceuil', 'valid_depot_donnees', 'valid_entrainement', 'valid_predictions', 'valid_statistiques']
+
+    # Initialisation des clés dans st.session_state
+    for key in key_user_choices:
+        if key not in st.session_state:
+            st.session_state[key] = None
+
+    for key in keys_to_initialize:
+        if key not in st.session_state:
+            st.session_state[key] = False
 
     with st.sidebar:
         if st.session_state.choix_modele is None:
             st.sidebar.page_link("1_🏠_Accueil.py", label="Accueil", icon="🏠")
+            st.sidebar.markdown("""---""")
+            st.sidebar.write("**session_state pour debug :**")
+            st.sidebar.write(st.session_state)
         else:
             display_menu()
     show()

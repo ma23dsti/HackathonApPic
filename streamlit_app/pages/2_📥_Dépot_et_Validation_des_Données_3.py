@@ -3,12 +3,17 @@ import numpy as np
 import pandas as pd
 import torch
 from menu import display_menu
+from dependency_manager import check_dependencies
 
 # Afficher le menu
 display_menu()
 
 def show():
     st.title("Dépot et Validation des Données")
+
+    check_dependencies("Dépot et Validation des Données")
+
+
     st.write("Veuillez entrer les données pour les 60 dernières secondes:")
 
     # Espace de dépôt des données d'entraînement
@@ -47,6 +52,7 @@ def show():
     if st.button("Valider"):
         if model is not None and prediction_data is not None:
             st.success("Les données ont été validées avec succès.")
+            st.session_state.valid_depot_donnees = True
         else:
             st.error("Erreur: Aucun fichier n'a été téléchargé ou les fichiers sont invalides.")
 

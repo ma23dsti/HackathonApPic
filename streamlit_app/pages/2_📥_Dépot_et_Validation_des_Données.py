@@ -2,11 +2,15 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 from menu import display_menu
+from dependency_manager import check_dependencies
 
 display_menu()
 
 def show():
     st.title("Dépot et Validation des Données")
+
+    check_dependencies("Dépot et Validation des Données")
+
     st.write("Veuillez entrer les données pour les 60 dernières secondes:")
 
     # Espace de dépôt des données
@@ -33,6 +37,7 @@ def show():
                 st.error("Erreur: Les données contiennent des valeurs négatives.")
             else:
                 st.success("Les données sont valides.")
+                st.session_state.valid_depot_donnees = True
         else:
             st.error("Erreur: Aucun fichier n'a été téléchargé.")
 

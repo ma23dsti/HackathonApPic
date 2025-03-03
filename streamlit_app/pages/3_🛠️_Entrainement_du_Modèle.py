@@ -6,12 +6,17 @@ from menu import display_menu
 import time
 from datetime import datetime
 import os
+from dependency_manager import check_dependencies
 
 # Afficher le menu
 display_menu()
 
 def show():
     st.title("Entraînement du Modèle")
+
+    check_dependencies("Entraînement du Modèle")
+
+
     st.write("Cliquez sur le bouton ci-dessous pour lancer l'entraînement du modèle.")
 
     # Initialiser les variables d'état
@@ -21,8 +26,8 @@ def show():
         st.session_state.nrmse_value = 0.0
     if 'dummy_model_path' not in st.session_state:
         st.session_state.dummy_model_path = ""
-    if 'training_completed' not in st.session_state:
-        st.session_state.training_completed = False
+    if 'valid_entrainement' not in st.session_state:
+        st.session_state.valid_entrainement = False
 
     # Valeur de baseline pour un modèle de qualité moyenne/décente
     baseline_nrmse = 0.15
@@ -63,10 +68,10 @@ def show():
         torch.save(dummy_model.state_dict(), model_path)
 
         # Marquer l'entraînement comme terminé
-        st.session_state.training_completed = True
+        st.session_state.valid_entrainement = True
 
     # Séparation pour la section des métriques
-    if st.session_state.training_completed:
+    if st.session_state.valid_entrainement:
         st.divider()
 
         # Section "Métrique"
