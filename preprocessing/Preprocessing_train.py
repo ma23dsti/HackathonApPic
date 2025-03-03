@@ -60,7 +60,7 @@ def load_data(path):
 
 # Pour check les trou avec purc_valid_jeu , se baser sur les time diff et pas que sur le nombre de check et faire check * time_diff / temps total du dataset 
 
-def preprocess_data(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shape = 60, sliding_window = 0):
+def preprocess_data(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shape = 60, sliding_window = 65):
 
     print("Vérification et conversion des types")
     # Vérification et conversion des types
