@@ -218,7 +218,6 @@ def main():
 
 
     # Vérifier si validation et train ont des données trop similaire ou non 50%
-
     # Charger le jeu de train
 
     X_train = pd.read_csv(args.path_train, header= None)
