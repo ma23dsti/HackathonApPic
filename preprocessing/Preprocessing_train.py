@@ -145,10 +145,10 @@ def preprocess_data(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shap
 
     missing_info = np.sum(df["Check"] * df["Time_Diff"]) / secondes
 
-    print(f"{missing_info}% de temps manquant dans le jeu de données")
+    print(f"{missing_info:.2f}% de temps manquant dans le jeu de données")
     if missing_info > purc_valid_jeu:
         raise ValueError(
-            "Les données ne sont pas correctement agrégées ou contiennent trop d'écarts, plus de {purc_valid_jeu}% de données avec des écart > à {ecart_debit_max} secondes."
+            "Les données ne sont pas correctement agrégées ou contiennent trop d'écarts, plus de {purc_valid_jeu:.2f}% de données avec des écart > à {ecart_debit_max} secondes."
         )
 
     # Reshape des données
@@ -171,6 +171,27 @@ def preprocess_data(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shap
     print("Reshape des données terminées")
 
     return X, y
+
+
+
+def check_similarity(x_train: pd.DataFrame, x_valid: pd.DataFrame, threshold: float = 50.0): 
+    #Fonction qui permet de vérifier que x_train et x_valid sont différents 
+    # Convertir les DataFrames en ensembles de tuples (pour une comparaison rapide)
+    train_set = set(map(tuple, x_train.to_numpy()))
+    valid_set = set(map(tuple, x_valid.to_numpy()))
+
+    # Trouver les lignes communes
+    common_rows = valid_set.intersection(train_set)
+
+    # Calculer le pourcentage de similarité
+    similarity_percentage = (len(common_rows) / len(x_valid)) * 100
+
+    print(f"Pourcentage de similarité : {similarity_percentage:.2f}%")
+
+    # Lever une erreur si le seuil est dépassé
+    if similarity_percentage > threshold:
+        raise ValueError(f"Le pourcentage de similarité ({similarity_percentage:.2f}%) dépasse {threshold}% !")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Prétraitement des données de séries temporelles")
@@ -231,9 +252,9 @@ def main():
     print("Données de validation : ",len(X_valid))
 
 
-    # Vérifier si validation et train ont des données trop similaire ou non 
-
-
+    # Vérifier si validation et train ont des données trop similaire ou non 50%
+    print("Vérification des similarité du jeu de train et de validation")
+    check_similarity(X_train, X_valid)
 
     # Sauvegarde des fichiers
     base_path = os.path.splitext(args.path)[0]
