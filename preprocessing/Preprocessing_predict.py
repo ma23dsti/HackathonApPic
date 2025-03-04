@@ -185,10 +185,11 @@ def check_similarity(x_train: pd.DataFrame, x_predict: pd.DataFrame, threshold: 
 def main():
     parser = argparse.ArgumentParser(description="Prétraitement des données de séries temporelles")
     parser.add_argument("path", type=str, help="Chemin du fichier CSV")
+    parser.add_argument("path_train", type=str, help="Chemin du fichier de train")
     parser.add_argument("--ecart_debit_max", type=int, default=30, help="Seuil de détection des écarts en secondes")
     parser.add_argument("--purc_valid_jeu", type=float, default=0.3, help="Seuil du pourcentage d'écarts acceptés (entre 0 et 1)")
     parser.add_argument("--horizon", type=int, default=5, choices=[1, 5, 10, 60, 300], help="Valeur d'horizon du nombre de seconde à prédire")
-    parser.add_argument("path_train", type=str, help="Chemin du fichier de train")
+    
     
     args = parser.parse_args()
     
@@ -219,7 +220,8 @@ def main():
     # Vérifier si validation et train ont des données trop similaire ou non 50%
 
     # Charger le jeu de train
-    X_train = load_data(args.path_train) 
+
+    X_train = pd.read_csv(args.path_train, header= None)
     print("Vérification des similarité du jeu de train et de prédiction ")
     check_similarity(X_train, X_predict)
 
