@@ -146,6 +146,7 @@ def preprocess_data(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shap
     missing_info = np.sum(df["Check"] * df["Time_Diff"]) / secondes
 
     print(f"{missing_info:.2f}% de temps manquant dans le jeu de données")
+
     if missing_info > purc_valid_jeu:
         raise ValueError(
             "Les données ne sont pas correctement agrégées ou contiennent trop d'écarts, plus de {purc_valid_jeu:.2f}% de données avec des écart > à {ecart_debit_max} secondes."
