@@ -21,3 +21,4 @@ notes.txt
 
 # Ignorer les fichiers générés à l'exécution
 donnees_on_fly/
+dummy_model*
