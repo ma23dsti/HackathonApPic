@@ -60,8 +60,7 @@ def display_menu():
     }
 
     # Afficher les étapes complétées
-    st.markdown("""---""")
-
+  
     # Afficher les choix de l'utilisateur et l'état de la session
     st.sidebar.markdown("### Paramètres sélectionnés pour la session")
 
