@@ -18,26 +18,27 @@ def show():
     check_dependencies("Prédictions")
 
     # Vérifier si les données sont déjà disponibles dans la session
-    #if 'input_data' not in st.session_state:
+    #if 'prediction_data' not in st.session_state:
     #    st.error("Aucune donnée validée. Veuillez d'abord valider les données sur la première page.")
     #    return
 
     # S'assurer que les données sont sous forme de DataFrame avec une colonne 'value'
-    if not isinstance(st.session_state.input_data, pd.DataFrame) or 'value' not in st.session_state.input_data.columns:
-        st.session_state.input_data = pd.DataFrame({'value': st.session_state.input_data.values.flatten()})
-        st.session_state.input_data.index = range(1, len(st.session_state.input_data) + 1)
+    if not isinstance(st.session_state.prediction_data, pd.DataFrame) or 'value' not in st.session_state.prediction_data.columns:
+    #if not isinstance(st.session_state.prediction_data, pd.DataFrame) or 'value' not in st.session_state.prediction_data.columns:
+        st.session_state.prediction_data = pd.DataFrame({'value': st.session_state.prediction_data.values.flatten()})
+        st.session_state.prediction_data.index = range(1, len(st.session_state.prediction_data) + 1)
 
     # Bouton pour faire les prédictions
     if st.button("Effectuer la prédiction"):
 
         if 'predictions_df' not in st.session_state or not st.session_state.prediction_effectuee:
             # Flatten and reshape to (1, 60) for model prediction
-            input_data_reshaped = np.array(st.session_state.input_data).flatten().reshape(1, -1)
+            prediction_data_reshaped = np.array(st.session_state.prediction_data).flatten().reshape(1, -1)
             # Ensure we have 60 features
-            if input_data_reshaped.shape[1] != 60:
-                st.error(f"Erreur: Le modèle attend 60 colonnes, mais {input_data_reshaped.shape[1]} ont été détectées.")
+            if prediction_data_reshaped.shape[1] != 60:
+                st.error(f"Erreur: Le modèle attend 60 colonnes, mais {prediction_data_reshaped.shape[1]} ont été détectées.")
                 return
-            predictions = predire_le_traffic(input_data_reshaped)
+            predictions = predire_le_traffic(prediction_data_reshaped)
             st.write("Prédiction terminée avec succès")
 
             predictions = np.array(predictions).flatten()
@@ -47,7 +48,7 @@ def show():
                 return
 
             # Create predictions DataFrame
-            start_index = input_data_reshaped.shape[1] + 1
+            start_index = prediction_data_reshaped.shape[1] + 1
             predictions_df = pd.DataFrame({
                 'Index': np.arange(start_index, start_index + len(predictions)),
                 'Predictions': predictions
@@ -65,9 +66,9 @@ def show():
 
         # Afficher les prédictions sous forme de graphique
         plt.figure(figsize=(12, 6))
-        plt.plot(st.session_state.input_data.index, st.session_state.input_data['value'], label="Données d'entrée", color='blue')
+        plt.plot(st.session_state.prediction_data.index, st.session_state.prediction_data['value'], label="Données d'entrée", color='blue')
         plt.plot(st.session_state.predictions_df['Index'], st.session_state.predictions_df['Predictions'], label="Prédictions", color='red')
-        plt.axvline(x=len(st.session_state.input_data), color='black', linestyle='--')
+        plt.axvline(x=len(st.session_state.prediction_data), color='black', linestyle='--')
         plt.xlabel("Index")
         plt.ylabel("Valeur")
         plt.title("Prédictions du modèle")

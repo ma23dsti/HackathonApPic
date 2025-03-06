@@ -130,7 +130,7 @@ def entrainer_le_modèle(dossier_donnees):
 
 
         # Training Parameters
-        epochs = 5
+        epochs = 3
         batch_size = 2048
 
         # Training Loop with Time Series Handling (No Shuffling)
@@ -193,6 +193,7 @@ def entrainer_le_modèle(dossier_donnees):
         # Calculate nRMSE
         nrmse_KPI = np.sqrt(mean_squared_error(y_valid, y_pred))/(max_y_val-min_y_val)
         st.write(f'Validation nRMSE: {nrmse_KPI}')
+        st.session_state.nrmse_value = nrmse_KPI
 
     else:
         st.write("Aucun fichier validé disponible. Procédez au dépot et à la validation des données avant.")

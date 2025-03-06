@@ -8,6 +8,9 @@ from datetime import datetime
 import os
 from dependency_manager import check_dependencies
 
+# Importer les fonctions utiles
+from utilitaires.Entrainement import entrainer_le_modèle
+
 # Afficher le menu
 display_menu()
 
@@ -16,6 +19,8 @@ def show():
 
     check_dependencies("Entraînement du Modèle")
 
+    preprocessing_dir = "streamlit_app/static/dossier_donnees/donnees_preprocessees/"
+    dossier_donnees_pour_entrainement = preprocessing_dir + "donnees_on_fly/"
 
     st.write("Cliquez sur le bouton ci-dessous pour lancer l'entraînement du modèle.")
 
@@ -34,23 +39,25 @@ def show():
 
     # Bouton pour lancer l'entraînement
     if st.button("Lancer l'entraînement"):
+        entrainer_le_modèle(dossier_donnees_pour_entrainement)
+
         # Définir un nombre aléatoire d'étapes entre 5 et 10
-        st.session_state.total_steps = np.random.randint(5, 11)
-        progress_text = f"Entraînement en cours... {st.session_state.total_steps} étapes au total."
+        ##st.session_state.total_steps = np.random.randint(5, 11)
+        ##progress_text = f"Entraînement en cours... {st.session_state.total_steps} étapes au total."
 
         # Créer une progress bar
-        progress_bar = st.progress(0, text=progress_text)
+        ##progress_bar = st.progress(0, text=progress_text)
 
         # Dummy training logic (à remplacer par l'appel au backend)
-        for i in range(1, st.session_state.total_steps + 1):
-            progress_bar.progress(i / st.session_state.total_steps, text=f"Étape {i}/{st.session_state.total_steps} : {progress_text}")
-            time.sleep(1)  # Simuler le temps de traitement
+        ##for i in range(1, st.session_state.total_steps + 1):
+            ##progress_bar.progress(i / st.session_state.total_steps, text=f"Étape {i}/{st.session_state.total_steps} : {progress_text}")
+            ##time.sleep(1)  # Simuler le temps de traitement
 
-        progress_bar.empty()  # Supprimer la progress bar après la fin de l'entraînement
+        ##progress_bar.empty()  # Supprimer la progress bar après la fin de l'entraînement
         st.success("Entraînement terminé avec succès.")
 
         # Générer une valeur aléatoire pour le NRMSE dans une plage décente
-        st.session_state.nrmse_value = np.random.uniform(0.05, 0.25)  # Plage décente pour un modèle de qualité moyenne
+        ##st.session_state.nrmse_value = np.random.uniform(0.05, 0.25)  # Plage décente pour un modèle de qualité moyenne
 
         # Créer un modèle dummy avec PyTorch
         class DummyModel(nn.Module):
@@ -81,7 +88,8 @@ def show():
             st.write("""Le **NRMSE** est une mesure de l'erreur normalisée entre les prédictions et les valeurs réelles. C'est une métrique couramment utilisée pour l'évaluation de ce type de modèle.
                  Plus d'informations en cliquant [ici](https://docs.oracle.com/cloud/help/fr/pbcs_common/PFUSU/insights_metrics_RMSE.htm#PFUSU-GUID-FD9381A1-81E1-4F6D-8EC4-82A6CE2A6E74).""")
 
-        # Estimation de la qualité du modèle
+        st.write(st.session_state.nrmse_value)
+        # Estimation de la qualité du modèle par rapport à la base line
         if st.session_state.nrmse_value < baseline_nrmse * 0.9:
             st.success("La qualité du modèle est **bonne**. ✅")
         elif baseline_nrmse * 0.9 <= st.session_state.nrmse_value <= baseline_nrmse * 1.1:
@@ -93,11 +101,10 @@ def show():
         with st.expander("Comment la qualité du modèle est-elle déterminée ?"):
             st.write("""
                 La qualité du modèle est évaluée en comparant le NRMSE (Normalized Root Mean Square Error) du modèle entraîné
-                avec le NRMSE du modèle de référence pré-chargé sur la plateforme (valeur de référence).
+                avec le NRMSE du modèle de référence pré-chargé sur la plateforme (valeur de référence: """, baseline_nrmse, """).
                 - Si le NRMSE du modèle est inférieur à 90% du NRMSE du modèle de référence, la qualité est considérée comme **bonne** ✅.
                 - Si le NRMSE est dans la plage [90% du NRMSE du modèle de référence, 110% du NRMSE du modèle de référence], la qualité est considérée comme **moyenne** ⚠️.
                 - Si le NRMSE est supérieur à 110% du NRMSE du modèle de référence, la qualité est considérée comme **mauvaise** ❌.
-                Dans cet exemple, le NRMSE du modèle de référence est fixé à **0.15**.
             """)
 
         # Lister les modèles sauvegardés
