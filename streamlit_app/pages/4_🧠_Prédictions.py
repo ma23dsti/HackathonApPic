@@ -4,62 +4,88 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from menu import display_menu
 from dependency_manager import check_dependencies
+from utilitaires.Prediction import predire_le_traffic
 
 display_menu()
+
+preprocessing_dir = "streamlit_app/static/dossier_donnees/donnees_preprocessees/"
+dossier_donnees_pour_entrainement = preprocessing_dir + "donnees_on_fly/"
+
 
 def show():
     st.title("Prédictions")
 
     check_dependencies("Prédictions")
 
-    # Générer des données aléatoires pour la démonstration
-    input_data = pd.DataFrame({
-        'value': np.random.randn(60).cumsum()  # Données cumulées pour simuler une série temporelle
-    })
+    # Vérifier si les données sont déjà disponibles dans la session
+    #if 'input_data' not in st.session_state:
+    #    st.error("Aucune donnée validée. Veuillez d'abord valider les données sur la première page.")
+    #    return
 
-    # Générer des prédictions aléatoires
-    predictions = np.random.randn(20).cumsum()  # Prédictions cumulées pour simuler une série temporelle
-
-    # Créer un DataFrame pour les prédictions
-    predictions_df = pd.DataFrame({
-        'Index': range(len(input_data), len(input_data) + len(predictions)),
-        'Predictions': predictions
-    })
-
-    # Stocker les données dans session_state pour les maintenir entre les exécutions
-    if 'input_data' not in st.session_state:
-        st.session_state.input_data = input_data
-        st.session_state.predictions_df = predictions_df
+    # S'assurer que les données sont sous forme de DataFrame avec une colonne 'value'
+    if not isinstance(st.session_state.input_data, pd.DataFrame) or 'value' not in st.session_state.input_data.columns:
+        st.session_state.input_data = pd.DataFrame({'value': st.session_state.input_data.values.flatten()})
+        st.session_state.input_data.index = range(1, len(st.session_state.input_data) + 1)
 
     # Bouton pour faire les prédictions
-    if st.button("Faire une prédiction"):
+    if st.button("Effectuer la prédiction"):
+
+        if 'predictions_df' not in st.session_state or not st.session_state.prediction_effectuee:
+            # Flatten and reshape to (1, 60) for model prediction
+            input_data_reshaped = np.array(st.session_state.input_data).flatten().reshape(1, -1)
+            # Ensure we have 60 features
+            if input_data_reshaped.shape[1] != 60:
+                st.error(f"Erreur: Le modèle attend 60 colonnes, mais {input_data_reshaped.shape[1]} ont été détectées.")
+                return
+            predictions = predire_le_traffic(input_data_reshaped)
+            st.write("Prédiction terminée avec succès")
+
+            predictions = np.array(predictions).flatten()
+            # Check lengths to prevent errors
+            if len(predictions) != 5:  # Expected next 5 values in time series
+                st.error(f"Erreur: Le modèle a généré {len(predictions)} valeurs, mais 5 étaient attendues.")
+                return
+
+            # Create predictions DataFrame
+            start_index = input_data_reshaped.shape[1] + 1
+            predictions_df = pd.DataFrame({
+                'Index': np.arange(start_index, start_index + len(predictions)),
+                'Predictions': predictions
+            })
+
+
+            st.session_state.predictions_df = predictions_df
+            st.session_state.prediction_effectuee = True
+            st.session_state.valid_predictions = True
+
+    # Afficher les prédictions et le graphique même si le bouton n'est pas recliqué
+    if 'predictions_df' in st.session_state and st.session_state.prediction_effectuee:
+        st.write("### Prédictions générées:")
+        st.write(st.session_state.predictions_df)
+
         # Afficher les prédictions sous forme de graphique
-        plt.figure(figsize=(12, 6))  # Taille fixe pour la figure
+        plt.figure(figsize=(12, 6))
         plt.plot(st.session_state.input_data.index, st.session_state.input_data['value'], label="Données d'entrée", color='blue')
         plt.plot(st.session_state.predictions_df['Index'], st.session_state.predictions_df['Predictions'], label="Prédictions", color='red')
-        plt.axvline(x=len(st.session_state.input_data) - 1, color='black', linestyle='--')
+        plt.axvline(x=len(st.session_state.input_data), color='black', linestyle='--')
         plt.xlabel("Index")
         plt.ylabel("Valeur")
         plt.title("Prédictions du modèle")
         plt.legend()
         st.pyplot(plt)
 
-        st.session_state.valid_predictions = True
-
         # Ajouter une séparation
-    st.markdown("---")
+        st.markdown("---")
 
-    # Afficher les prédictions dans un DataFrame horizontalement
-    st.dataframe(st.session_state.predictions_df)
+        # Téléchargement des prédictions en CSV
+        csv = st.session_state.predictions_df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="Télécharger les prédictions en CSV",
+            data=csv,
+            file_name='predictions.csv',
+            mime='text/csv',
+        )
 
-    # Téléchargement des prédictions en CSV
-    csv = st.session_state.predictions_df.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="Télécharger les prédictions en CSV",
-        data=csv,
-        file_name='predictions.csv',
-        mime='text/csv',
-    )
 
 if __name__ == "__main__":
     show()
