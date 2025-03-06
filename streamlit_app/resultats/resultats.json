@@ -1,0 +1,36 @@
+{
+    "donnees_entrees": {
+      "nom_fichier": "donnees_traffic.csv",
+      "unite_mesure": "Bits/s",
+      "format_mesure": "",
+      "temps_horaire": ["2025-02-10 00:01:00", "2025-02-10 00:01:01", "...", "2025-02-10 00:01:59"],
+      "temps_relatif": [1, 2, "...", 60],
+      "donnees_observees": [5.0, 6.1, "...", 69.9]
+    },
+    "resultats": {
+      "predictions": {
+        "temps_relatif": [61, 62, "...", 65],
+        "temps_horaire": ["2025-02-10 00:02:00", "...", "2025-02-10 00:02:04"],
+        "modeles": [
+          {
+            "id": "modele_moyen",
+            "nom": "nom du modele moyen",
+            "kpi": { "mae": 0.3, "nrmse": 0.10 },
+            "donnees_predites": [100.0, 100.8, "...", 147.2]
+          },
+          {
+            "id": "modele_1",
+            "nom": "nom du modele 1",
+            "kpi": { "mae": 0.2, "nrmse": 0.09 },
+            "donnees_predites": [100.0, 100.8, "...", 147.2]
+          },
+          {
+            "id": "modele_n",
+            "nom": "nom du modele n",
+            "kpi": { "mae": 0.4, "nrmse": 0.12 },
+            "donnees_predites": [100.0, 100.8, "...", 147.2]
+          }
+        ]
+      }
+    }
+  }  
