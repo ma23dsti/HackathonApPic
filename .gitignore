@@ -18,3 +18,6 @@ tmp/
 
 # Ignorer les fichiers personnels
 notes.txt
+
+# Ignorer les fichiers générés à l'exécution
+donnees_on_fly/

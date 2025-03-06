@@ -9,4 +9,7 @@ dependencies:
   - pandas
   - streamlit
   - matplotlib
+  - joblib
+  - scikit-learn
   - pytorch
+  - jsonschema
