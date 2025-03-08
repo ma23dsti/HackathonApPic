@@ -26,7 +26,7 @@ def predire_le_traffic(donnees_observees):
 
     # Charger le modèle et ses hyperparamètres.
 
-    with open("streamlit_app/modeles/modele_parametres.json", "r") as f:
+    with open("streamlit_app/static/modeles/modele_par_defaut/modele_parametres.json", "r") as f:
         params = json.load(f)
 
     loaded_input_size = params["input_size"]
@@ -38,12 +38,12 @@ def predire_le_traffic(donnees_observees):
     loaded_model = BiLSTMModel(loaded_input_size, loaded_hidden_size, loaded_output_size).to(device)
 
     # Charger les poids du modèle
-    loaded_model.load_state_dict(torch.load("streamlit_app/modeles/modele.pth", map_location=device))
+    loaded_model.load_state_dict(torch.load("streamlit_app/static/modeles/modele_par_defaut/modele.pth", map_location=device))
     loaded_model.eval()  # Set model to evaluation mode
 
     # Charger les transformations des données
-    loaded_x_scaler = joblib.load("streamlit_app/modeles/x_scaler.pkl")
-    loaded_y_scaler = joblib.load("streamlit_app/modeles/y_scaler.pkl")
+    loaded_x_scaler = joblib.load("streamlit_app/static/modeles/modele_par_defaut/x_scaler.pkl")
+    loaded_y_scaler = joblib.load("streamlit_app/static/modeles/modele_par_defaut/y_scaler.pkl")
 
     # Prédire à partir de l'historique fourni
 
