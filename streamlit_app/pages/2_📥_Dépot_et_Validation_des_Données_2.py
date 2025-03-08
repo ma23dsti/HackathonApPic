@@ -16,9 +16,9 @@ from utilitaires.Preprocessing_des_donnees import preprocesser_les_donnees_1, pr
 display_menu()
 
 # Dossiers de données
-path_raw_data = "streamlit_app/static/dossier_donnees/raw_data/"    # Jeu de données par défaut (jeu de données fournis lors de la phase 1 de l'hackathon)
-preprocessing_dir = "streamlit_app/static/dossier_donnees/donnees_preprocessees/"
-donnees_on_fly_dir = os.path.join(preprocessing_dir, "donnees_on_fly/")
+path_donnees_raw = "streamlit_app/static/donnees/donnees_raw/"    # Jeu de données par défaut (jeu de données fournis lors de la phase 1 de l'hackathon)
+preprocessing_dir = "streamlit_app/static/donnees/donnees_preprocessees/"
+donnees_a_la_volee_dir = os.path.join(preprocessing_dir, "donnees_a_la_volee/")
 
 def show():
     
@@ -28,10 +28,10 @@ def show():
 
     if st.button("Nettoyer les dossiers de validation"):
         # Check if the directory exists
-        if os.path.exists(donnees_on_fly_dir) and os.path.isdir(donnees_on_fly_dir):
+        if os.path.exists(donnees_a_la_volee_dir) and os.path.isdir(donnees_a_la_volee_dir):
             # Loop through all files in the directory and remove them
-            for file_name in os.listdir(donnees_on_fly_dir):
-                file_path = os.path.join(donnees_on_fly_dir, file_name)
+            for file_name in os.listdir(donnees_a_la_volee_dir):
+                file_path = os.path.join(donnees_a_la_volee_dir, file_name)
                 try:
                     if os.path.isfile(file_path):
                         os.remove(file_path)
@@ -39,9 +39,9 @@ def show():
                         shutil.rmtree(file_path)  # If there are subdirectories, remove them
                 except Exception as e:
                     print(f"Error deleting {file_path}: {e}")
-            print("All files in 'donnees_on_fly/' have been deleted.")
+            print("All files in 'donnees_a_la_volee/' have been deleted.")
         else:
-            print("The directory 'donnees_on_fly/' does not exist.")
+            print("The directory 'donnees_a_la_volee/' does not exist.")
 
     st.write("Veuillez entrer les données pour les 60 dernières secondes:")
 
@@ -61,7 +61,7 @@ def show():
             input_data = None
     else:
         # Jeu de données par défaut afin de pouvoir effectuer des tests
-        input_data = pd.read_csv(path_raw_data + "donnees_par_defaut/raw_train.csv")
+        input_data = pd.read_csv(path_donnees_raw + "donnees_par_defaut/raw_train.csv")
         st.write(f"Format des données d'entrée par défaut - Nombre de lignes: {input_data.shape[0]:,}, Nombre de colonnes: {input_data.shape[1]}")
         st.write("Apperçu des données d'entrée par défaut:", input_data[:5])
 
@@ -93,18 +93,18 @@ def show():
             else:
                 # Validation des données utilisées pour l'entrainement
                 # Create the directory if it does not exist
-                os.makedirs(donnees_on_fly_dir, exist_ok=True)
-                raw_data_train, raw_data_valid = preprocesser_les_donnees_1(preprocessing_dir, input_data)
+                os.makedirs(donnees_a_la_volee_dir, exist_ok=True)
+                donnees_raw_train, donnees_raw_valid = preprocesser_les_donnees_1(preprocessing_dir, input_data)
                 window_size_x = 60
                 window_size_y = 5
                 step = 13
                 subset = "train"
-                preprocesser_les_donnees_2(donnees_on_fly_dir, raw_data_train, window_size_x=window_size_x, window_size_y=window_size_y, step=step, subset=subset)
+                preprocesser_les_donnees_2(donnees_a_la_volee_dir, donnees_raw_train, window_size_x=window_size_x, window_size_y=window_size_y, step=step, subset=subset)
                 window_size_x = 60
                 window_size_y = 5
                 step = 65
                 subset = "valid"
-                preprocesser_les_donnees_2(donnees_on_fly_dir, raw_data_valid, window_size_x=window_size_x, window_size_y=window_size_y, step=step, subset=subset)
+                preprocesser_les_donnees_2(donnees_a_la_volee_dir, donnees_raw_valid, window_size_x=window_size_x, window_size_y=window_size_y, step=step, subset=subset)
 
                 # Validation des données utilisées pour la prédiction
                 # Convert prediction_data to a DataFrame with a 'value' column

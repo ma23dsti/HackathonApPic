@@ -8,8 +8,8 @@ from utilitaires.Prediction import predire_le_traffic
 
 display_menu()
 
-preprocessing_dir = "streamlit_app/static/dossier_donnees/donnees_preprocessees/"
-dossier_donnees_pour_entrainement = preprocessing_dir + "donnees_on_fly/"
+preprocessing_dir = "streamlit_app/static/donnees/donnees_preprocessees/"
+dossier_donnees_pour_entrainement = preprocessing_dir + "donnees_a_la_volee/"
 
 
 def show():
