@@ -1,0 +1,24 @@
+# Ignorer l'environnement virtuel
+env/
+
+# Ignorer les fichiers de compilation Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignorer les fichiers de configuration de l'éditeur
+.vscode/
+.idea/
+
+# Ignorer les fichiers de log
+*.log
+
+# Ignorer les fichiers temporaires
+tmp/
+
+# Ignorer les fichiers personnels
+notes.txt
+
+# Ignorer les fichiers générés à l'exécution
+donnees_a_la_volee/
+modeles_entraines/
