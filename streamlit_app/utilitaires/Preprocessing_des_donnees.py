@@ -173,26 +173,26 @@ def preprocesser_les_donnees_1(preprocessing_dir, input_data):
     orig_split_factor = 2080027/2398267 #répartition train/test utilisé lors de la phase 1 (2398267 = 2080027 + 318240)
 
     # Split the data
-    #raw_data_train, raw_data_valid = train_test_split(raw_train_resampled, train_size=orig_split_factor, random_state=42, shuffle=False)
+    #donnees_raw_train, donnees_raw_valid = train_test_split(raw_train_resampled, train_size=orig_split_factor, random_state=42, shuffle=False)
     #Split de la phase 1 de l'Hackathon
-    raw_data_train, raw_data_valid = train_test_split(input_data, train_size=orig_split_factor, random_state=42, shuffle=False)
+    donnees_raw_train, donnees_raw_valid = train_test_split(input_data, train_size=orig_split_factor, random_state=42, shuffle=False)
 
     # Display the sizes
-    st.write(f"Taille des données d'entrainement: {len(raw_data_train)}")
-    st.write(f"Taille des données de test: {len(raw_data_valid)}")
+    st.write(f"Taille des données d'entrainement: {len(donnees_raw_train)}")
+    st.write(f"Taille des données de test: {len(donnees_raw_valid)}")
 
-    #raw_data_train.iloc[:1] = raw_data_train.iloc[:1].applymap(lambda x: x.strftime("%Y-%m-%d %H:%M:%S") if isinstance(x, pd.Timestamp) else x)
-    st.write("Première ligne du jeu de données d'entrainement:", raw_data_train.iloc[:1])
-    st.write("Première ligne du jeu de données de test:", raw_data_valid.iloc[:1])
+    #donnees_raw_train.iloc[:1] = donnees_raw_train.iloc[:1].applymap(lambda x: x.strftime("%Y-%m-%d %H:%M:%S") if isinstance(x, pd.Timestamp) else x)
+    st.write("Première ligne du jeu de données d'entrainement:", donnees_raw_train.iloc[:1])
+    st.write("Première ligne du jeu de données de test:", donnees_raw_valid.iloc[:1])
 
-    return raw_data_train, raw_data_valid
+    return donnees_raw_train, donnees_raw_valid
 
 # Définir la fonction de Preprocessing
 
-def preprocesser_les_donnees_2 (preprocessing_dir, raw_data, window_size_x, window_size_y, step, subset):
+def preprocesser_les_donnees_2 (preprocessing_dir, donnees_raw, window_size_x, window_size_y, step, subset):
 
     # Extract the Bits/s column
-    bits_per_second = raw_data["Bits/s"].values
+    bits_per_second = donnees_raw["Bits/s"].values
 
     # Prepare x_subset and y_subset
     x_subset = []

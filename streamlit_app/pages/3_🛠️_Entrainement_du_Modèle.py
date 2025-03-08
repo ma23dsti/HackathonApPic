@@ -19,8 +19,8 @@ def show():
 
     check_dependencies("Entraînement du Modèle")
 
-    preprocessing_dir = "streamlit_app/static/dossier_donnees/donnees_preprocessees/"
-    dossier_donnees_pour_entrainement = preprocessing_dir + "donnees_on_fly/"
+    preprocessing_dir = "streamlit_app/static/donnees/donnees_preprocessees/"
+    dossier_donnees_pour_entrainement = preprocessing_dir + "donnees_a_la_volee/"
 
     st.write("Cliquez sur le bouton ci-dessous pour lancer l'entraînement du modèle.")
 
@@ -39,6 +39,9 @@ def show():
 
     # Bouton pour lancer l'entraînement
     if st.button("Lancer l'entraînement"):
+        # Créer le dossier pour les modèles entrainés s'il n'existe pas.
+        os.makedirs(dossier_donnees_pour_entrainement, exist_ok=True)
+
         entrainer_le_modèle(dossier_donnees_pour_entrainement)
 
         # Définir un nombre aléatoire d'étapes entre 5 et 10
@@ -70,7 +73,7 @@ def show():
 
         dummy_model = DummyModel()
         model_filename = f"dummy_model_{st.session_state.nrmse_value:.3f}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pth"
-        model_path = os.path.join("streamlit_app/static/trained_models", model_filename)
+        model_path = os.path.join("streamlit_app/static/modeles/modeles_entraines", model_filename)
         os.makedirs(os.path.dirname(model_path), exist_ok=True)
         torch.save(dummy_model.state_dict(), model_path)
 
@@ -110,7 +113,7 @@ def show():
         # Lister les modèles sauvegardés
         st.divider()
         st.header("Téléchargement du Modèle")
-        model_files = [f.replace(".pth", "") for f in os.listdir("streamlit_app/static/trained_models") if f.endswith(".pth")]
+        model_files = [f.replace(".pth", "") for f in os.listdir("streamlit_app/static/modeles/modeles_entraines") if f.endswith(".pth")]
 
         if model_files:
             selected_model = st.selectbox("Sélectionnez le modèle à télécharger :", model_files)
@@ -121,7 +124,7 @@ def show():
             # Boutons pour télécharger et vider les modèles
             col1, col2 = st.columns([1, 1])
             with col1:
-                model_path = os.path.join("streamlit_app/static/trained_models", f"{selected_model}.pth")
+                model_path = os.path.join("streamlit_app/static/modeles/modeles_entraines", f"{selected_model}.pth")
                 with open(model_path, "rb") as f:
                     st.download_button(
                         label="Télécharger le modèle",
@@ -131,9 +134,9 @@ def show():
                     )
             with col2:
                 if st.button("Supprimer les modèles entraînés"):
-                    for model_file in os.listdir("streamlit_app/static/trained_models"):
+                    for model_file in os.listdir("streamlit_app/static/modeles/modeles_entraines"):
                         if model_file.endswith(".pth"):
-                            os.remove(os.path.join("streamlit_app/static/trained_models", model_file))
+                            os.remove(os.path.join("streamlit_app/static/modeles/modeles_entraines", model_file))
                     st.success("Tous les modèles ont été supprimés.")
                     # Mettre à jour la liste déroulante après suppression
                     st.rerun()

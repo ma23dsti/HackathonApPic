@@ -7,7 +7,7 @@ from dependency_manager import check_dependencies
 display_menu()
 
 # Dossiers de données
-preprocessing_dir = "streamlit_app/static/dossier_donnees/donnees_preprocessees/"
+preprocessing_dir = "streamlit_app/static/donnees/donnees_preprocessees/"
 
 def show():
     st.title("Dépot et Validation des Données")
