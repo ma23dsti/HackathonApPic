@@ -132,17 +132,19 @@ def preprocesser_les_donnees_1(preprocessing_dir, input_data):
 
     # Find the index of the row with Time = '2024-06-10 22:00:00'
     target_time = pd.Timestamp('2024-06-10 22:00:00')
+    # Trouver l'index du temps ciblé
+    filtered_index = raw_train_resampled[raw_train_resampled['Time'] == target_time].index
+    if not filtered_index.empty:
+        target_index = filtered_index[0]
+        # Get 5 rows before and 1 after the target row
+        start_index = max(target_index - 5, 0)  # Make sure the index is not negative
+        end_index = target_index + 2  # 1 row after + 1 for the target row itself
 
-    # Find the index of the target time
-    target_index = raw_train_resampled[raw_train_resampled['Time'] == target_time].index[0]
-
-    # Get 5 rows before and 1 after the target row
-    start_index = max(target_index - 5, 0)  # Make sure the index is not negative
-    end_index = target_index + 2  # 1 row after + 1 for the target row itself
-
-    # Display the rows
-    subset = raw_train_resampled.iloc[start_index:end_index]
-    st.write(subset)
+        # Display the rows
+        subset = raw_train_resampled.iloc[start_index:end_index]
+        st.write(subset)
+    else:
+        target_index = None
 
     # Update the time difference between consecutive rows
     raw_train_resampled['Time_diff'] = raw_train_resampled['Time'].diff()        

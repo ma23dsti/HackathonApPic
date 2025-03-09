@@ -20,9 +20,9 @@ def set_seed(seed):
     torch.cuda.manual_seed_all(seed)  # if using multi-GPU
     np.random.seed(seed)
     random.seed(seed)
-
 set_seed(42)
 
+st.session_state.entrainement_modele=True
 
 # Custom callback to plot training and validation loss during training
 
