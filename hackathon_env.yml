@@ -4,12 +4,15 @@ channels:
   - defaults
 dependencies:
   - python=3.11
+  - fpdf
   - flask
+  - joblib
+  - jsonschema
+  - kaleido
+  - matplotlib
   - numpy
   - pandas
-  - streamlit
-  - matplotlib
-  - joblib
-  - scikit-learn
+  - plotly
   - pytorch
-  - jsonschema
+  - scikit-learn
+  - streamlit  

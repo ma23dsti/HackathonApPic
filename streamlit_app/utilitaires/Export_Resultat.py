@@ -67,7 +67,9 @@ def  export_data_zip(resultat_df, kpi_df, choix_donnees_export, choix_format_exp
                 pdf.image(temp_tab_path, x=10, y=pdf.get_y()-100, w=180)
 
             pdf_buffer = io.BytesIO()
-            pdf.output(pdf_buffer)
+            # Générer le PDF et l'enregistrer dans pdf_buffer
+            pdf_content = pdf.output(dest="S").encode("latin1")  # Obtenir le PDF comme une chaîne de caractères et l'encoder en binaire
+            pdf_buffer.write(pdf_content)
             pdf_buffer.seek(0)
             zip_file.writestr("rapport_donnees_selectionnes2.pdf", pdf_buffer.read())  # Ajout dans le ZIP
 
