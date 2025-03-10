@@ -104,7 +104,8 @@ def mettre_a_jour_model_info(predictions, entrainement_modele=False):
 
     st.session_state.resultats = resultats
 
-    resultats_nom_fichier = f"resultats_{modele_moyen["kpi"]["nrmse"]:.4f}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    resultats_nom_fichier = "resultats.json"
+    #resultats_nom_fichier = f"resultats_{modele_moyen["kpi"]["nrmse"]:.4f}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     resultats_chemin_fichier = os.path.join("streamlit_app/resultats/donnees_a_la_volee", resultats_nom_fichier)
     os.makedirs(os.path.dirname(resultats_chemin_fichier), exist_ok=True)
     with open(resultats_chemin_fichier, "w", encoding="utf-8") as f:

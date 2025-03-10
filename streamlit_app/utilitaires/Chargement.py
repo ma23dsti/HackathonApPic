@@ -10,8 +10,8 @@ def chargement_donnees():
 
     # Récupérer le dossier où se trouve Chargement.py
     script_dir = os.path.dirname(__file__)
-    # Ajouter chemin vers resultats/resultats.json
-    file_path = os.path.join(script_dir, '..', 'resultats', 'resultats.json')
+    # Ajouter chemin vers resultats/donnees_a_la_volee/resultats.json
+    file_path = os.path.join(script_dir, '..', 'resultats/donnees_a_la_volee', 'resultats.json')
     # Normalisation du chemin
     file_path = os.path.abspath(file_path)
     #chargement fichier
@@ -75,7 +75,7 @@ def chargement_donnees():
      
 
     #creation de listes utiles pour filtrer sur le dataframe
-    id_modele_moyen=['modele_moyen'] #rappel Id model moyen
+    id_modele_moyen=['moyenne'] #rappel Id model moyen
     id_modele_entree=['modele_entree'] #rappel Id model historique (données observées)
 
     # liste des unités de mesure possible
