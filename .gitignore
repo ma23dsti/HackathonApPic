@@ -18,3 +18,7 @@ tmp/
 
 # Ignorer les fichiers personnels
 notes.txt
+
+# Ignorer les fichiers générés à l'exécution
+donnees_a_la_volee/
+modeles_entraines/

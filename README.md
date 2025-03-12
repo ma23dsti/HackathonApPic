@@ -29,4 +29,6 @@ Pour lancer l'application Streamlit :
 streamlit run streamlit_app/1_🏠_Accueil.py
 ```
 
+Remplissez les options/paramètres que vous souhaitez puis validez avec le boutons.
+Le menu relatif à ce que vous souhaitez faire apparaitra.
 Utilisez la barre latérale de Streamlit pour naviguer entre les pages.
