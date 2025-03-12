@@ -162,9 +162,12 @@ def preprocess_data(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shap
 
 
 
-def check_similarity(x_train: pd.DataFrame, x_valid: pd.DataFrame, threshold: float = 50.0): 
-    #Fonction qui permet de vérifier que x_train et x_valid sont différents 
-    # Convertir les DataFrames en ensembles de tuples (pour une comparaison rapide)
+def check_similarity(x_train: pd.DataFrame, x_valid: pd.DataFrame,  threshold: float = 50.0) -> None: 
+    """
+    Fonction qui permet de vérifier que x_train et x_valid sont différents 
+    Convertir les DataFrames en ensembles de tuples (pour une comparaison rapide)
+
+    """
     train_set = set(map(tuple, x_train.to_numpy()))
     valid_set = set(map(tuple, x_valid.to_numpy()))
 
@@ -179,6 +182,7 @@ def check_similarity(x_train: pd.DataFrame, x_valid: pd.DataFrame, threshold: fl
     # Lever une erreur si le seuil est dépassé
     if similarity_percentage > threshold:
         raise ValueError(f"Le pourcentage de similarité ({similarity_percentage:.2f}%) dépasse {threshold}% !")
+    pass
 
 
 def run(preprocess_dir : str, df: DataFrame, horizon=5, 
@@ -188,7 +192,7 @@ def run(preprocess_dir : str, df: DataFrame, horizon=5,
 
     # Mapping horizon to shape
     horizon_mapping = {1: 12, 5: 60, 30: 90, 60: 120, 300: 190}
-    
+
     # Vérification des paramètres : 
     if not isinstance(df, DataFrame):
         raise TypeError("df doit être un DataFrame pandas.")
