@@ -178,7 +178,7 @@ def entrainer_le_modèle(dossier_donnees):
                 plt.plot(training_monitor_notebook.val_loss, label="Validation Loss", color='orange')
                 plt.xlabel("Epochs", fontsize=5)
                 plt.ylabel("Loss", fontsize=5)
-                plt.title("Training and Validation Loss Over Epochs", fontsize=5)
+                plt.title("Training and Validation Loss par Epoch", fontsize=5)
                 plt.legend(fontsize=5)
                 plt.xticks(fontsize=5)
                 plt.yticks(fontsize=5)
