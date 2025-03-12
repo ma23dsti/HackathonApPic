@@ -5,7 +5,7 @@ import pandas as pd
 import shutil
 from menu import display_menu
 from dependency_manager import check_dependencies
-from utilitaires.Preprocessing_des_donnees import preprocesser_les_donnees_1, preprocesser_les_donnees_2
+from utilitaires.Preprocessing.Preprocessing_train import preprocesser_les_donnees
 
 # Afficher le menu
 display_menu()
@@ -104,20 +104,10 @@ def show():
             elif (prediction_data < 0).values.any():
                 st.error("Erreur: Les données contiennent des valeurs négatives.")
             else:
-                # Validation des données utilisées pour l'entrainement
+                # Preprocessing et Validation des données à utiliser pour l'entrainement
                 # Create the directory if it does not exist
                 os.makedirs(donnees_a_la_volee_dir, exist_ok=True)
-                donnees_raw_train, donnees_raw_valid = preprocesser_les_donnees_1(preprocessing_dir, input_data)
-                window_size_x = 60
-                window_size_y = 5
-                step = 13
-                subset = "train"
-                preprocesser_les_donnees_2(donnees_a_la_volee_dir, donnees_raw_train, window_size_x=window_size_x, window_size_y=window_size_y, step=step, subset=subset)
-                window_size_x = 60
-                window_size_y = 5
-                step = 65
-                subset = "valid"
-                preprocesser_les_donnees_2(donnees_a_la_volee_dir, donnees_raw_valid, window_size_x=window_size_x, window_size_y=window_size_y, step=step, subset=subset)
+                preprocesser_les_donnees(donnees_a_la_volee_dir, input_data) 
 
                 # Validation des données utilisées pour la prédiction
                 # Convert prediction_data to a DataFrame with a 'value' column

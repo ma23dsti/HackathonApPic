@@ -8,11 +8,12 @@ dependencies:
   - flask
   - joblib
   - jsonschema
-  - kaleido
   - matplotlib
   - numpy
   - pandas
   - plotly
   - pytorch
   - scikit-learn
-  - streamlit  
+  - streamlit
+  - pip:  # On a une erreur si on installe kaleido côté serveur avec conda.
+    - kaleido

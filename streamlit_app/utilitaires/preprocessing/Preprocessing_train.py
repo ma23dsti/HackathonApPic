@@ -47,7 +47,7 @@ from sklearn.model_selection import train_test_split
 
 # Pour check les trou avec purc_valid_jeu , se baser sur les time diff et pas que sur le nombre de check et faire check * time_diff / temps total du dataset 
 
-def preprocess_data(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shape = 60, sliding_window = 65):
+def reprocesser_les_donnees(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shape = 60, sliding_window = 65):
 
     print("Vérification et conversion des types")
     # Vérification et conversion des types
@@ -148,10 +148,10 @@ def preprocess_data(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shap
         segment = df.iloc[i : i + size]
         if segment["Check"].sum() == 0:
             valid_sequences.append(segment["debit"].values)
-    preprocess_data = pd.DataFrame(valid_sequences)
+    reprocesser_les_donnees = pd.DataFrame(valid_sequences)
 
     # On enleve la derniere ligne si elle n'est pas complète
-    clean_data = preprocess_data.dropna()
+    clean_data = reprocesser_les_donnees.dropna()
 
     X = clean_data.iloc[:, :shape]
     y = clean_data.iloc[:, shape:]
@@ -185,8 +185,9 @@ def check_similarity(x_train: pd.DataFrame, x_valid: pd.DataFrame,  threshold: f
     pass
 
 
-def run(preprocess_dir : str, df: DataFrame, horizon=5, 
-        split =0.13269581,  ecart_debit_max=30, 
+def preprocesser_les_donnees(preprocess_dir : str, df: DataFrame, horizon=5, 
+        split = 1-2080027/2398267,    #0.13269581: répartition train/test utilisé lors de la phase 1 (2398267 = 2080027 + 318240)
+        ecart_debit_max=30, 
         purc_valid_jeu=0.4, 
         sliding_window_train = 13, sliding_window_valid = 65):
 
@@ -234,13 +235,13 @@ def run(preprocess_dir : str, df: DataFrame, horizon=5,
 
     # Prétraiter les données de train
     print("Preprocess des données de train") 
-    X_train, y_train = preprocess_data(df_train, ecart_debit_max, purc_valid_jeu, horizon, shape, sliding_window_train)
+    X_train, y_train = reprocesser_les_donnees(df_train, ecart_debit_max, purc_valid_jeu, horizon, shape, sliding_window_train)
 
     print("Données de train : ",len(X_train))
 
     # Prétraiter les données de test
     print("Preprocess des données de validation")
-    X_valid, y_valid = preprocess_data(df_valid, ecart_debit_max, purc_valid_jeu, horizon, shape, sliding_window_valid)
+    X_valid, y_valid = reprocesser_les_donnees(df_valid, ecart_debit_max, purc_valid_jeu, horizon, shape, sliding_window_valid)
 
     print("Données de validation : ",len(X_valid))
 
@@ -250,10 +251,10 @@ def run(preprocess_dir : str, df: DataFrame, horizon=5,
     check_similarity(X_train, X_valid)
 
 
-    name_file_x_train = f"{preprocess_dir}_x_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
-    name_file_y_train = f"{preprocess_dir}_y_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
-    name_file_x_valid = f"{preprocess_dir}_x_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
-    name_file_y_valid = f"{preprocess_dir}_y_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
+    name_file_x_train = f"{preprocess_dir}x_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
+    name_file_y_train = f"{preprocess_dir}y_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
+    name_file_x_valid = f"{preprocess_dir}x_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
+    name_file_y_valid = f"{preprocess_dir}y_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
 
 
     X_train.to_csv(name_file_x_train, index=False,header=False)
