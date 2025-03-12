@@ -5,7 +5,7 @@ import pandas as pd
 import shutil
 from menu import display_menu
 from dependency_manager import check_dependencies
-from utilitaires.Preprocessing.Preprocessing_train import preprocesser_les_donnees
+from utilitaires.preprocessing.Preprocessing_train import preprocesser_les_donnees
 
 # Afficher le menu
 display_menu()
