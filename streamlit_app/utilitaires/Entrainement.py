@@ -38,13 +38,15 @@ class TrainingMonitorNotebook:
 
         #clear_output(wait=True)
 
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(5, 3))  # Adjust size to occupy half of the window
         train_line, = plt.plot(self.train_loss, label="Training Loss", color='blue')
         val_line, = plt.plot(self.val_loss, label="Validation Loss", color='orange')
-        plt.xlabel("Epochs")
-        plt.ylabel("Loss")
-        plt.title("Training and Validation Loss Over Epochs")
-        plt.legend()
+        plt.xlabel("Epochs", fontsize=6)
+        plt.ylabel("Loss", fontsize=6)
+        plt.title("Training and Validation Loss Over Epochs", fontsize=6)
+        plt.legend(fontsize=6)
+        plt.xticks(fontsize=6)
+        plt.yticks(fontsize=6)
         plt.grid(True)
 
         #mplcursors.cursor([train_line, val_line], hover=True)
@@ -125,13 +127,16 @@ def entrainer_le_modèle(dossier_donnees):
         x_valid_tensor = torch.tensor(x_valid_standardized, dtype=torch.float32).to(device)
         y_valid_tensor = torch.tensor(y_valid_standardized, dtype=torch.float32).to(device)
 
-        st.write(y_valid_standardized)
+        #st.write(y_valid_standardized)
 
 
 
         # Training Parameters
-        epochs = 3
+        epochs = 10
         batch_size = 2048
+
+        # Create a Streamlit placeholder for the plot
+        plot_placeholder = st.empty()
 
         # Training Loop with Time Series Handling (No Shuffling)
         for epoch in range(epochs):
@@ -161,12 +166,26 @@ def entrainer_le_modèle(dossier_donnees):
                 val_outputs = model(x_valid_tensor)
                 val_loss = criterion(val_outputs, y_valid_tensor).item()
 
-            st.write(f"Epoch [{epoch+1}/{epochs}] - Train Loss: {avg_train_loss:.4f} - Val Loss: {val_loss:.4f}")
+            #st.write(f"Epoch [{epoch+1}/{epochs}] - Train Loss: {avg_train_loss:.4f} - Val Loss: {val_loss:.4f}")
 
-            # Update the live plot
-            #training_monitor_notebook.update_plot(epoch, avg_train_loss, val_loss)
+            # Mettre à jour en live le graphique des métriques
+            training_monitor_notebook.update_plot(epoch, avg_train_loss, val_loss)
 
-        # Validation (optional)
+            # Afficher le graph des métriques
+            with plot_placeholder.container():
+                plt.figure(figsize=(4, 2))
+                plt.plot(training_monitor_notebook.train_loss, label="Training Loss", color='blue')
+                plt.plot(training_monitor_notebook.val_loss, label="Validation Loss", color='orange')
+                plt.xlabel("Epochs", fontsize=5)
+                plt.ylabel("Loss", fontsize=5)
+                plt.title("Training and Validation Loss par Epoch", fontsize=5)
+                plt.legend(fontsize=5)
+                plt.xticks(fontsize=5)
+                plt.yticks(fontsize=5)
+                plt.grid(True)
+                st.pyplot(plt)
+
+        # Validation KPI
         model.eval()
         with torch.no_grad():
             val_outputs = model(x_valid_tensor)
@@ -192,7 +211,7 @@ def entrainer_le_modèle(dossier_donnees):
 
         # Calculate nRMSE
         nrmse_KPI = np.sqrt(mean_squared_error(y_valid, y_pred))/(max_y_val-min_y_val)
-        st.write(f'Validation nRMSE: {nrmse_KPI}')
+        st.write(f'VMSE: {nrmse_KPI}')
         st.session_state.nrmse_value = nrmse_KPI
 
     else:
