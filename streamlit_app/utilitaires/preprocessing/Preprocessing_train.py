@@ -1,5 +1,6 @@
 # Import des librairies 
 import pandas as pd
+from pandas import DataFrame
 import numpy as np
 import argparse
 import os
@@ -43,20 +44,6 @@ from sklearn.model_selection import train_test_split
 # Faire les opérations pour les 2 jeux de données et ensuite retourner 4 fichiers x_train, y_train, x_valid et y_valid  
 
 # Vérifier que les données de validation soit différentes des données de train 
-
-def load_data(path):
-    # Lecture du fichier avec détection automatique du séparateur et de l'en-tête
-    df = pd.read_csv(path, sep=None, engine='python')
-    
-    # Vérifier que le fichier contient exactement deux colonnes
-    if df.shape[1] != 2:
-        raise ValueError("Le fichier doit contenir exactement deux colonnes")
-    
-    # Renommer les colonnes en 'Time' et 'debit'
-    df.columns = ['Time', 'debit']
-    
-    return df
-
 
 # Pour check les trou avec purc_valid_jeu , se baser sur les time diff et pas que sur le nombre de check et faire check * time_diff / temps total du dataset 
 
@@ -194,61 +181,62 @@ def check_similarity(x_train: pd.DataFrame, x_valid: pd.DataFrame, threshold: fl
         raise ValueError(f"Le pourcentage de similarité ({similarity_percentage:.2f}%) dépasse {threshold}% !")
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Prétraitement des données de séries temporelles")
-    parser.add_argument("path", type=str, help="Chemin du fichier CSV")
-    parser.add_argument("--split", type=float, default=0.13269581, help="Pourcentage de séparation entre train et validation des données (entre 0 et 1)")
-    parser.add_argument("--ecart_debit_max", type=int, default=30, help="Seuil de détection des écarts en secondes")
-    parser.add_argument("--purc_valid_jeu", type=float, default=0.3, help="Seuil du pourcentage d'écarts acceptés (entre 0 et 1)")
-    parser.add_argument("--horizon", type=int, default=5, choices=[1, 5, 10, 60, 300], help="Valeur d'horizon du nombre de seconde à prédire")
-    parser.add_argument("--sliding_window_train", type=int, default=13, help="Sliding window du jeu de train")
-    parser.add_argument("--sliding_window_valid", type=int, default=65, help="Sliding window du jeu de validation")
-    
-    args = parser.parse_args()
-    
-        # Mapping horizon to shape
-    horizon_mapping = {1: 12, 5: 60, 10: 90, 60: 120, 300: 190}
+def run(preprocess_dir : str, df: DataFrame, horizon=5, 
+        split =0.13269581,  ecart_debit_max=30, 
+        purc_valid_jeu=0.4, 
+        sliding_window_train = 13, sliding_window_valid = 65):
 
-    if args.horizon not in horizon_mapping:
-        raise ValueError("Horizon doit valoir 1, 5, 10, 60 ou 300")
-    shape = horizon_mapping[args.horizon]
-    size = shape+args.horizon
+    # Mapping horizon to shape
+    horizon_mapping = {1: 12, 5: 60, 30: 90, 60: 120, 300: 190}
+    
     # Vérification des paramètres : 
+    if not isinstance(df, DataFrame):
+        raise TypeError("df doit être un DataFrame pandas.")
+    if not isinstance(preprocess_dir, str):
+        raise TypeError("preprocess_dir doit être une chaîne de caractères.")
 
-    if args.split > 1 or args.split <= 0:
+
+    if horizon not in horizon_mapping:
+        raise ValueError("Horizon doit valoir 1, 5, 10, 60 ou 300")
+    shape = horizon_mapping[horizon]
+    size = shape+horizon
+
+
+    if split > 1 or split <= 0:
         raise ValueError("Le split doit etre compris entre 0 et 1")
     
-    if args.ecart_debit_max < 0:
+    if ecart_debit_max < 0:
         raise ValueError("ecart_debit_max doit etre une valeur positive ou nulle")
 
-    if args.purc_valid_jeu > 1 or args.purc_valid_jeu <= 0:
+    if purc_valid_jeu > 1 or purc_valid_jeu <= 0:
         raise ValueError("purc_valid_jeu doit etre compris entre 0 et 1")
     
-    if args.sliding_window_train <= 0 or args.sliding_window_train > size:
+    if sliding_window_train <= 0 or sliding_window_train > size:
         raise ValueError(f"sliding_window_train doit etre une valeur positive qui ne dépasse pas la taille {size}")
 
-    if args.sliding_window_valid <= 0 or args.sliding_window_valid > size:
+    if sliding_window_valid <= 0 or sliding_window_valid > size:
         raise ValueError(f"sliding_window_valid doit etre une valeur positive qui ne dépasse pas la taille {size}")
-    
 
-    # Charger les données
-    df = load_data(args.path)
+    # Vérifier que le fichier contient exactement deux colonnes
+    if df.shape[1] != 2:
+        raise ValueError("Le fichier doit contenir exactement deux colonnes")
     
-    
+    # Renommer les colonnes en 'Time' et 'debit'
+    df.columns = ['Time', 'debit']
+
     # Séparer les données 
-    df_train, df_valid = train_test_split(df,test_size=args.split, shuffle=False)
+    df_train, df_valid = train_test_split(df,test_size=split, shuffle=False)
     print("Split des données en train et validation. \n Train : ",len(df_train), "\n Validation : ",len(df_valid))
-
 
     # Prétraiter les données de train
     print("Preprocess des données de train") 
-    X_train, y_train = preprocess_data(df_train, args.ecart_debit_max, args.purc_valid_jeu, args.horizon, shape, args.sliding_window_train)
+    X_train, y_train = preprocess_data(df_train, ecart_debit_max, purc_valid_jeu, horizon, shape, sliding_window_train)
 
     print("Données de train : ",len(X_train))
 
     # Prétraiter les données de test
     print("Preprocess des données de validation")
-    X_valid, y_valid = preprocess_data(df_valid, args.ecart_debit_max, args.purc_valid_jeu, args.horizon, shape, args.sliding_window_valid)
+    X_valid, y_valid = preprocess_data(df_valid, ecart_debit_max, purc_valid_jeu, horizon, shape, sliding_window_valid)
 
     print("Données de validation : ",len(X_valid))
 
@@ -257,13 +245,11 @@ def main():
     print("Vérification des similarité du jeu de train et de validation")
     check_similarity(X_train, X_valid)
 
-    # Sauvegarde des fichiers
-    base_path = os.path.splitext(args.path)[0]
 
-    name_file_x_train = f"{base_path}_x_train_s{args.sliding_window_train}_o{shape}_p{args.horizon}.csv"
-    name_file_y_train = f"{base_path}_y_train_s{args.sliding_window_train}_o{shape}_p{args.horizon}.csv"
-    name_file_x_valid = f"{base_path}_x_valid_s{args.sliding_window_valid}_o{shape}_p{args.horizon}.csv"
-    name_file_y_valid = f"{base_path}_y_valid_s{args.sliding_window_valid}_o{shape}_p{args.horizon}.csv"
+    name_file_x_train = f"{preprocess_dir}_x_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
+    name_file_y_train = f"{preprocess_dir}_y_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
+    name_file_x_valid = f"{preprocess_dir}_x_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
+    name_file_y_valid = f"{preprocess_dir}_y_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
 
 
     X_train.to_csv(name_file_x_train, index=False,header=False)
@@ -272,6 +258,4 @@ def main():
     y_valid.to_csv(name_file_y_valid, index=False,header=False)
     
     print(f"Fichiers sauvegardés: {name_file_x_train} \n {name_file_y_train} \n {name_file_x_valid} \n {name_file_y_valid} ")
-
-if __name__ == "__main__":
-    main()
+    pass
