@@ -4,42 +4,37 @@ import pandas as pd
 
 # Fonction pour afficher les propositions de sélection des parametres utilisés pour l'affichage du graphe et tableau
 def selection_parametre(liste_unite,nb_modele):
-    #st.markdown("#### 🔧 Sélection des Paramètres à afficher")
-
-    # Initialisation des valeurs dans session_state
-    st.session_state.setdefault("affichage_modele_entree", True)
-    st.session_state.setdefault("choix_temps", "temps horaire")
-    st.session_state.setdefault("affichage_ensemble_prediction", True)
-    st.session_state.setdefault("affichage_moyenne_prediction", False)
-    st.session_state.setdefault("choix_unite", liste_unite[0])
-    
-
-    # Ajout du CSS pour aligner checkboxes et boutons radio
     st.markdown(
     """
     <style>
-    /* Alignement des checkboxes */
+    /* Réduire l'espace entre les checkboxes dans la page principale uniquement */
     div[data-testid="stCheckbox"] {
-        margin-top: -_px;  /* Remonte toutes les checkboxes */
-        margin-bottom: -5px; /* Réduit l'espace entre elles */
+        margin-top: -5px !important;  /* Réduit l'espace entre les checkboxes */
+        margin-bottom: -5px !important;
         display: flex;  /* Force l'alignement en ligne */
         align-items: center; /* Assure l'alignement vertical */
     }
 
-    /* Corrige les marges spécifiques à la troisième checkbox */
+    /* Ajustement spécifique de la troisième checkbox */
     div[data-testid="stCheckbox"]:last-of-type {
-        margin-top: -10px !important;  /* Remonte  la troisième checkbox */
+        margin-top: -10px !important;  /* Remonte la troisième checkbox */
     }
 
-    /* Réduit  l'espace entre les boutons radio */
+    /* Réduction de l'espace entre les boutons radio dans la page principale uniquement */
     div[data-testid="stRadio"] {
-        margin-top: -38px;  /* Remonte légèrement les boutons radio */
-        margin-bottom: -10px; /* Réduit l’espace vertical entre eux */
+        margin-top: -38px !important;  /* Réduit l'espace entre les boutons radio */
+        margin-bottom: -10px !important;
     }
-   
-    /* Vérifie que les contenants n'ajoutent pas de marges supplémentaires */
-    div[data-testid="stMarkdownContainer"] {
-        margin-bottom: -10px;
+
+    /* Restaurer l'espacement normal du menu dans la sidebar */
+    div[data-testid="stSidebar"] div {
+        margin-bottom: 0px !important;  /* Assure qu'il n'y a pas d'impact sur l'espacement */
+    }
+
+    /* Assurer que le contenu dans la sidebar reste avec son espacement normal */
+    div[data-testid="stSidebarContent"] {
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
     }
     </style>
     """,
@@ -47,41 +42,44 @@ def selection_parametre(liste_unite,nb_modele):
     )
 
 
+
+
+
+
+    #st.markdown('<div class="main-container">', unsafe_allow_html=True)
+
     #Decoupage de la page en colonnes pour mettre les propositions
     col1, col2, col3, col4 = st.columns([2,1,1,1])  
     
     with col1:
         st.markdown("📊Les données:")
         # Affichage de l'historique
-        affichage_modele_entree=st.checkbox("Données d'entrée", value=True)
+        #affichage_modele_entree=st.checkbox("Données d'entrée", value=True)
+        affichage_modele_entree = st.checkbox("Données d'entrée", key='affichage_modele_entree')
          # Affichage pour l'ensemble des prédictions
-        affichage_ensemble_prediction = st.checkbox("Ensemble des prédictions", 
-                                    value=st.session_state.affichage_ensemble_prediction)
+        #affichage_ensemble_prediction = st.checkbox("Ensemble des prédictions", 
+        #                            value=st.session_state.affichage_ensemble_prediction)
+        affichage_ensemble_prediction = st.checkbox("Ensemble des prédictions", key='affichage_ensemble_prediction')
         # Affichage de la moyenne si plusieurs prédictions
-        affichage_moyenne_prediction = (st.checkbox("Moyenne des prédictions", 
-                                    value=st.session_state.affichage_moyenne_prediction) 
-                                    if nb_modele > 1 else False)
-    
+        affichage_moyenne_prediction = (st.checkbox("Moyenne des prédictions", key="affichage_moyenne_prediction") 
+                                        if nb_modele > 1 else False)
+        
+        
 
     with col2:
         # Axe de temps
         st.markdown("📅 L'axe temporel:")
-        choix_temps = st.radio("", ["Temps horaire", "Temps relatif"], 
-                               index=0 if st.session_state.choix_temps == "temps horaire" else 1).strip().lower()
-        
+       
+        choix_temps = st.radio("",["Temps horaire", "Temps relatif"],key="choix_temps")
+        choix_temps = choix_temps.strip().lower()
+
     with col3:
         # Sélection de l'unité de mesure
         st.markdown("📅 L'unité:")
-        choix_unite = st.radio("", liste_unite, index=liste_unite.index(st.session_state.choix_unite))
-    
-    
-     # Mise à jour de session_state après sélection
-    st.session_state.affichage_modele_entree = affichage_modele_entree
-    st.session_state.choix_temps = choix_temps
-    st.session_state.affichage_ensemble_prediction = affichage_ensemble_prediction
-    st.session_state.affichage_moyenne_prediction = affichage_moyenne_prediction
-    st.session_state.choix_unite = choix_unite
+        choix_unite = st.radio("", liste_unite, key="choix_unite")
 
+    #st.markdown('</div>', unsafe_allow_html=True)
+    
     return affichage_modele_entree, choix_temps, affichage_ensemble_prediction, affichage_moyenne_prediction, choix_unite
 
 
@@ -116,65 +114,50 @@ def selection_variable(id_modele_entree, choix_temps, affichage_modele_entree, a
     df_kpi = pd.DataFrame(donnees_kpi) # transformation en dataframe
     df_kpi_selection=df_kpi[df_kpi[var_id].isin(liste_modele)]
     
-    return titre_graphe, label_x, label_y, df_kpi_selection, df_entrees_prevision_selection, choix_temps, liste_donnees_filtre
+    return titre_graphe, label_x, label_y, df_kpi_selection, df_entrees_prevision_selection, liste_donnees_filtre
+
+
 
 
 # fonction pour sélectionner les données d'export
-def selection_donnee_export():
-    st.write("Les données :")
-    donnees_prevision="Données des prévisions"
-    donnees_kpi="Métriques"
 
-    # Initialisation des valeurs dans session_state
-    st.session_state.setdefault("export_donnees", True)
-    st.session_state.setdefault("export_kpi", True)
-    st.session_state.setdefault("choix_donnees_export", [donnees_prevision, donnees_kpi])
+def selection_donnees_format_export():
 
-
-    export_donnees = st.checkbox(donnees_prevision, value=st.session_state.export_donnees)
-    export_kpi = st.checkbox(donnees_kpi, value=st.session_state.export_kpi)
+    col1, col2, col3 = st.columns([1,1,2])  
+    with col1:
+        st.write("Les données :")
+        donnees_prevision="Données des prévisions"
+        donnees_kpi="Métriques"
+        export_donnees = st.checkbox(donnees_prevision, key='export_donnees')
+        export_kpi = st.checkbox(donnees_kpi, key='export_kpi')
     
-    # Stocker les choix dans une liste
-    choix_donnees_export = []
-    if export_donnees:
-        choix_donnees_export.append(donnees_prevision)
-    if export_kpi:
-        choix_donnees_export.append(donnees_kpi)
+        # Stocker les choix dans une liste
+        choix_donnees_export = []
+        if export_donnees:
+            choix_donnees_export.append(donnees_prevision)
+        if export_kpi:
+            choix_donnees_export.append(donnees_kpi)
     
-    # Mise à jour de session_state après sélection
-    st.session_state.export_donnees = export_donnees
-    st.session_state.export_kpi = export_kpi
-    st.session_state.choix_donnees_export = choix_donnees_export
 
-    return choix_donnees_export, donnees_prevision, donnees_kpi
+    with col2:
+        # sélection du format d'export
+        st.write("Les formats :")
 
-# fonction pour sélectionner le format d'export
-def selection_format_export():
-    st.write("Les formats :")
-
-    # Initialisation des valeurs dans session_state
-    st.session_state.setdefault("export_format_csv", True)
-    st.session_state.setdefault("export_format_pdf", True)
-    st.session_state.setdefault("choix_format_export", ["CSV", "PDF"])
-
-
-    export_format_csv = st.checkbox("CSV", value=st.session_state.export_format_csv)
-    export_format_pdf = st.checkbox("PDF", value=st.session_state.export_format_pdf)
+        export_format_csv = st.checkbox("CSV", key='export_format_csv')
+        export_format_pdf = st.checkbox("PDF", key='export_format_pdf')
+        export_format_png = st.checkbox("PNG", key='export_format_png')
     
-    # Stocker les choix dans une liste
-    choix_format_export = []
+        # Stocker les choix dans une liste
+        choix_format_export = []
     
-    if export_format_csv:
-        choix_format_export.append("CSV")
-    
-    if export_format_pdf:
-        choix_format_export.append("PDF")
-
-    # Mise à jour de session_state après sélection
-    st.session_state.export_format_csv = export_format_csv
-    st.session_state.export_format_pdf = export_format_pdf
-    st.session_state.choix_format_export = choix_format_export
-
-    return choix_format_export
-
-
+        if export_format_csv:
+            choix_format_export.append("CSV")
+        
+        if export_format_pdf:
+            choix_format_export.append("PDF")
+        
+        if export_format_png:
+            choix_format_export.append("PNG")
+        
+    #return choix_format_export, choix_donnees_export, donnees_prevision, donnees_kpi,dpi_value
+    return choix_format_export, choix_donnees_export, donnees_prevision, donnees_kpi

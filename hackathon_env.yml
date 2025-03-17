@@ -4,7 +4,6 @@ channels:
   - defaults
 dependencies:
   - python=3.11
-  - fpdf
   - flask
   - joblib
   - jsonschema
@@ -13,7 +12,9 @@ dependencies:
   - pandas
   - plotly
   - pytorch
+  - reportlab
   - scikit-learn
   - streamlit
+  - streamlit-extras
   - pip:  # On a une erreur si on installe kaleido côté serveur avec conda.
     - kaleido
