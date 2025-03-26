@@ -3,15 +3,17 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
 
+
 # Définition des palettes
 palette_defaut = px.colors.qualitative.Plotly 
 
 
 # Définition des styles de lignes et des épaisseurs (12 styles différents)
-ligne_styles = [':','-', '--', '-.', ':']  # Plein, tirets, mixte, pointillé
+ligne_styles = [':','-', '--', '-.']  # Plein, tirets, mixte, pointillé
 ligne_epaisseur = [1, 1.5, 2]  
 
 #Fonction de creation du graphe des prévisions
+
 def creation_graphique(df_data,palette,id_modele,var_id,var_x,var_y,label_x,label_y):
    
     # Création de la figure
@@ -33,8 +35,11 @@ def creation_graphique(df_data,palette,id_modele,var_id,var_x,var_y,label_x,labe
 
     # Ajout de la légende
     ax.legend()
+    plt.tight_layout()
 
     return fig
+  
+
 
 #Fonction pour créer le tableau des métriques
 def creation_tableau (df_kpi_selection):
@@ -63,6 +68,7 @@ def creation_tableau (df_kpi_selection):
     )])
     tab.update_layout(
         autosize=False,  # Désactive l'ajustement automatique
+        height=350,
         margin=dict(t=0, l=0, r=0, b=0)  # Suppression totale des marges pour éviter tout centrage vertical
     )
  
