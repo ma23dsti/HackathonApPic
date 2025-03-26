@@ -11,7 +11,8 @@ def chargement_donnees():
     # Récupérer le dossier où se trouve Chargement.py
     script_dir = os.path.dirname(__file__)
     # Ajouter chemin vers resultats/donnees_a_la_volee/resultats.json
-    file_path = os.path.join(script_dir, '..', 'resultats/donnees_a_la_volee', 'resultats.json')
+    #file_path = os.path.join(script_dir, '..', 'resultats/donnees_a_la_volee', 'resultats.json')
+    file_path = os.path.join(script_dir, '..', 'resultats/donnees_a_la_volee', 'resultats_augmente.json')
     # Normalisation du chemin
     file_path = os.path.abspath(file_path)
     #chargement fichier
@@ -75,8 +76,16 @@ def chargement_donnees():
      
 
     #creation de listes utiles pour filtrer sur le dataframe
-    id_modele_moyen=['moyenne'] #rappel Id model moyen
-    id_modele_entree=['modele_entree'] #rappel Id model historique (données observées)
+    id_modele_moyen=['moyenne'] #rappel Id model moyen (moyenne des prédictions)
+    id_modele_entree=['modele_entree'] #rappel Id model des données d'entrée (données observées)
+    min_date=df_entrees_prevision['temps horaire'].min().to_pydatetime() # date min du df
+    max_date=df_entrees_prevision['temps horaire'].max().to_pydatetime() # date max du df
+    min_date_entree=df_donnees_entrees['temps horaire'].min().to_pydatetime() # date min du df
+    max_date_entree=df_donnees_entrees['temps horaire'].max().to_pydatetime() # date max du df
+    min_date_prevision=pd.DataFrame(donnees_prevision)['temps horaire'].min() # date min du df
+    max_date_prevision=pd.DataFrame(donnees_prevision)['temps horaire'].max() # date max du df
+
+
 
     # liste des unités de mesure possible
     liste_unite = df_entrees_prevision['unite mesure'].unique().tolist()
@@ -91,7 +100,7 @@ def chargement_donnees():
     col_temps=[col for col in df_entrees_prevision.columns if 'temps' in col.lower()]
 
 
-    return df_entrees_prevision, donnees_kpi, col_temps, liste_modeles_id,nb_modele,id_modele_moyen,id_modele_entree,liste_unite,mesure_format, var_id, var_val
+    return df_entrees_prevision, donnees_kpi, col_temps, liste_modeles_id,nb_modele,id_modele_moyen,id_modele_entree,liste_unite,mesure_format, var_id, var_val, min_date, max_date, min_date_entree, max_date_entree, min_date_prevision, max_date_prevision
 
 
 

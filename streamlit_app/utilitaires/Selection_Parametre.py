@@ -1,163 +1,170 @@
 import streamlit as st
+#from streamlit_datetime_range_picker import datetime_range_picker
+from datetime import timedelta
 import pandas as pd
 
 
-# Fonction pour afficher les propositions de sélection des parametres utilisés pour l'affichage du graphe et tableau
-def selection_parametre(liste_unite,nb_modele):
-    st.markdown(
+
+def create_checkbox_group(options):
     """
-    <style>
-    /* Réduire l'espace entre les checkboxes dans la page principale uniquement */
-    div[data-testid="stCheckbox"] {
-        margin-top: -5px !important;  /* Réduit l'espace entre les checkboxes */
-        margin-bottom: -5px !important;
-        display: flex;  /* Force l'alignement en ligne */
-        align-items: center; /* Assure l'alignement vertical */
-    }
+    Genere groupe de checkbox basé sur une liste (options) 
+    avec comme clé le nom correspondant dans `st.session_state`
+    """
+    return {key: st.checkbox(label, key=key) for key, label in options.items()}
 
-    /* Ajustement spécifique de la troisième checkbox */
-    div[data-testid="stCheckbox"]:last-of-type {
-        margin-top: -10px !important;  /* Remonte la troisième checkbox */
-    }
-
-    /* Réduction de l'espace entre les boutons radio dans la page principale uniquement */
-    div[data-testid="stRadio"] {
-        margin-top: -38px !important;  /* Réduit l'espace entre les boutons radio */
-        margin-bottom: -10px !important;
-    }
-
-    /* Restaurer l'espacement normal du menu dans la sidebar */
-    div[data-testid="stSidebar"] div {
-        margin-bottom: 0px !important;  /* Assure qu'il n'y a pas d'impact sur l'espacement */
-    }
-
-    /* Assurer que le contenu dans la sidebar reste avec son espacement normal */
-    div[data-testid="stSidebarContent"] {
-        padding-top: 0px !important;
-        padding-bottom: 0px !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-    )
-
-
-
-
-
-
-    #st.markdown('<div class="main-container">', unsafe_allow_html=True)
+# Fonction pour afficher les propositions de sélection des parametres utilisés pour l'affichage du graphe et tableau
+def selection_parametre(liste_unite,nb_modele,min_date,max_date, selection_date):
+    """ Gére l'affichage par checkbox, bouton radio des differentes options necessaires 
+    pour la sélection des parametres utiles pour le graphe et tableau,
+    """
 
     #Decoupage de la page en colonnes pour mettre les propositions
     col1, col2, col3, col4 = st.columns([2,1,1,1])  
     
     with col1:
         st.markdown("📊Les données:")
-        # Affichage de l'historique
-        #affichage_modele_entree=st.checkbox("Données d'entrée", value=True)
-        affichage_modele_entree = st.checkbox("Données d'entrée", key='affichage_modele_entree')
-         # Affichage pour l'ensemble des prédictions
-        #affichage_ensemble_prediction = st.checkbox("Ensemble des prédictions", 
-        #                            value=st.session_state.affichage_ensemble_prediction)
-        affichage_ensemble_prediction = st.checkbox("Ensemble des prédictions", key='affichage_ensemble_prediction')
-        # Affichage de la moyenne si plusieurs prédictions
+        # Affichage des checkbox pour déterminer les données
+        checkboxes = create_checkbox_group({
+            "affichage_modele_entree": "Données d'entrée",
+            "affichage_ensemble_prediction": "Ensemble des prédictions"
+        })
+        # Affichage de la moyenne des prédictions uniquement si plusieurs modèles existent
         affichage_moyenne_prediction = (st.checkbox("Moyenne des prédictions", key="affichage_moyenne_prediction") 
                                         if nb_modele > 1 else False)
         
-        
-
     with col2:
         # Axe de temps
-        st.markdown("📅 L'axe temporel:")
-       
+        st.markdown("📅 Type de temps:")
+        #choix_temps = create_radio_group(["Temps horaire", "Temps relatif"], "choix_temps")
         choix_temps = st.radio("",["Temps horaire", "Temps relatif"],key="choix_temps")
         choix_temps = choix_temps.strip().lower()
 
     with col3:
         # Sélection de l'unité de mesure
-        st.markdown("📅 L'unité:")
+        st.markdown("📅 Unité de mesure:")
         choix_unite = st.radio("", liste_unite, key="choix_unite")
-
-    #st.markdown('</div>', unsafe_allow_html=True)
     
-    return affichage_modele_entree, choix_temps, affichage_ensemble_prediction, affichage_moyenne_prediction, choix_unite
+    return checkboxes["affichage_modele_entree"], choix_temps, checkboxes["affichage_ensemble_prediction"], affichage_moyenne_prediction, choix_unite
+
+def selection_plage_date(min_date, max_date):
+    # Slider pour sélectionner la plage temporelle
+    debut_date, fin_date = st.slider(
+        "",
+        min_value=min_date,
+        max_value=max_date,
+        #value=st.session_state["selection_date"],  # pas necessaire, doublon avec key
+        step=timedelta(seconds=1),
+        format="YYYY-MM-DD HH:mm:ss",
+        key="selection_date"  # synchronisation automatique
+    )
+
+    return debut_date, fin_date
 
 
-# fonction pour identifier les variables et filtre suite à la sélection
-def selection_variable(id_modele_entree, choix_temps, affichage_modele_entree, affichage_moyenne_prediction, affichage_ensemble_prediction, df_entrees_prevision, donnees_kpi, liste_modeles_id,mesure_format,choix_unite, var_id,id_modele_moyen):
+
+def selection_variable_filtre(id_modele_entree, selection_options, selection_date, df_entrees_prevision, donnees_kpi, liste_modeles_id, var_id, id_modele_moyen,):
+    """
+    Sélectionne les variables et données filtrées en fonction des paramétres choisis par l'utilisateur.
+    Retourne les DataFrames filtrés pour le graphique et le tableau.
+    """
+
+    # Déduction des valeurs en fonction des options sélectionnées
+    modele_moyen = id_modele_moyen if selection_options["affichage_moyenne_prediction"] else []
+    liste_modele_ensemble = liste_modeles_id if selection_options["affichage_ensemble_prediction"] else []
+    liste_modele_entree = id_modele_entree if selection_options["affichage_modele_entree"] else []
+
+    # Liste complète des modèles à afficher
+    liste_modele = modele_moyen + liste_modele_ensemble
+    liste_donnees_filtre = liste_modele_entree + liste_modele
+
+    # Selection plage temps
+
+    # Filtrage des données
+    df_entrees_prevision_selection = df_entrees_prevision[(df_entrees_prevision[var_id].isin(liste_donnees_filtre)) &
+                                                          (df_entrees_prevision['temps horaire'] >= pd.Timestamp(selection_date[0])) &
+                                                          (df_entrees_prevision['temps horaire'] <= pd.Timestamp(selection_date[1]))]
+   
+    # verification si liste modele change apres le filtrage
+    liste_modele_filtre_selection = df_entrees_prevision_selection['id donnee'].unique().tolist()
+    if set(liste_modele_filtre_selection) !=set(liste_donnees_filtre):
+        if set(liste_modele_filtre_selection)==set(liste_modele):
+            st.toast("Les données d'entrée ont été exclues par votre sélection temporelle.", icon="⚠️")
+        elif not liste_modele_filtre_selection:  # liste complètement vide
+            st.toast("Toutes les données ont été exclues par votre sélection temporelle.", icon="⚠️")
+        else:
+            st.toast("Les données de prédiction ont été exclues par votre sélection temporelle.", icon="⚠️")
+            liste_modele=[] 
+    liste_donnees_filtre=liste_modele_filtre_selection
+
     
-    # déduit de la selection : ensemble des données liées aux Prédictions et/ou moyenne uniquement
-    modele_moyen,titre_part_moyen=(id_modele_moyen,"Moyenne des Prédictions") if affichage_moyenne_prediction else ([],"")
-    liste_modele_ensemble,titre_part_ensemble=(liste_modeles_id,"Ensemble des Prédictions") if affichage_ensemble_prediction else ([],"")
-     
-    #déduit de l'affichage historique:
-    liste_modele_entree,titre_part_modele_entree=(id_modele_entree,"Données d'entrée") if affichage_modele_entree else ([],"")
+
+    
+    df_kpi = pd.DataFrame(donnees_kpi)
+    if liste_modele:
+        df_kpi_selection = df_kpi[df_kpi[var_id].isin(liste_modele)]
+    else:
+        df_kpi_selection = pd.DataFrame(columns=df_kpi.columns)
+
+
+    return df_entrees_prevision_selection, df_kpi_selection, liste_donnees_filtre
+
+def selection_titre(selection_options, choix_temps, mesure_format, choix_unite):
+    """
+    Génère le titre du graphique et les labels des axes en fonction des options sélectionnées.
+    """
+
+    # Construction du titre du graphique
+    titre_parts = []
+    if selection_options["affichage_modele_entree"]:
+        titre_parts.append("Données d'entrée")
+    if selection_options["affichage_ensemble_prediction"]:
+        titre_parts.append("Ensemble des Prédictions")
+    if selection_options["affichage_moyenne_prediction"]:
+        titre_parts.append("Moyenne des Prédictions")
+
+    titre_graphe = "Graphique des " + ", ".join(titre_parts)
 
     # format déduit de l'unité choisi
-    index_mesure= mesure_format['unite mesure'].index(choix_unite)
-    choix_format = "" if not mesure_format["format mesure"] else mesure_format["format mesure"][index_mesure]
+    index_unite= mesure_format['unite mesure'].index(choix_unite)
+    choix_format = "" if not mesure_format["format mesure"] else mesure_format["format mesure"][index_unite]
 
+    # Labels des axes
+    label_x = choix_temps
+    label_y = f"{choix_format} {choix_unite}"
 
-    # titre du graphique construit à partir des différentes sélection
-    titre_graphe = "Graphique des " + ", ".join(filter(None, [titre_part_modele_entree, titre_part_ensemble, titre_part_moyen]))
-
-    # affichage des labels
-    label_x = choix_temps # selon sélection de l'xe temporelle
-    label_y = f"{choix_format} {choix_unite} " #selon sélection de l'unité de mesure et déduction du format associé
-    
-    #selection des données pour le graphique
-    liste_modele=modele_moyen+liste_modele_ensemble
-    liste_donnees_filtre=liste_modele_entree+liste_modele
-    df_entrees_prevision_selection=df_entrees_prevision[df_entrees_prevision[var_id].isin(liste_donnees_filtre)]
-
-    #Selection des données pour le tableau des Indicateurs
-    df_kpi = pd.DataFrame(donnees_kpi) # transformation en dataframe
-    df_kpi_selection=df_kpi[df_kpi[var_id].isin(liste_modele)]
-    
-    return titre_graphe, label_x, label_y, df_kpi_selection, df_entrees_prevision_selection, liste_donnees_filtre
-
-
-
-
-# fonction pour sélectionner les données d'export
+    return titre_graphe, label_x, label_y
 
 def selection_donnees_format_export():
+    """
+    Génère les options de sélection pour l'exportation des données et des formats.
+    """
 
     col1, col2, col3 = st.columns([1,1,2])  
+
     with col1:
-        st.write("Les données :")
-        donnees_prevision="Données des prévisions"
-        donnees_kpi="Métriques"
-        export_donnees = st.checkbox(donnees_prevision, key='export_donnees')
-        export_kpi = st.checkbox(donnees_kpi, key='export_kpi')
-    
-        # Stocker les choix dans une liste
-        choix_donnees_export = []
-        if export_donnees:
-            choix_donnees_export.append(donnees_prevision)
-        if export_kpi:
-            choix_donnees_export.append(donnees_kpi)
-    
+        st.write("📊 Les données :")
+
+        # Checkbox pour les données à exporter
+        donnees_options = create_checkbox_group({
+            "export_prevision": "Données des prévisions",
+            "export_kpi": "Métriques"
+        })
 
     with col2:
-        # sélection du format d'export
-        st.write("Les formats :")
+        st.write("📂 Les formats :")
 
-        export_format_csv = st.checkbox("CSV", key='export_format_csv')
-        export_format_pdf = st.checkbox("PDF", key='export_format_pdf')
-        export_format_png = st.checkbox("PNG", key='export_format_png')
-    
-        # Stocker les choix dans une liste
-        choix_format_export = []
-    
-        if export_format_csv:
-            choix_format_export.append("CSV")
-        
-        if export_format_pdf:
-            choix_format_export.append("PDF")
-        
-        if export_format_png:
-            choix_format_export.append("PNG")
-        
-    #return choix_format_export, choix_donnees_export, donnees_prevision, donnees_kpi,dpi_value
-    return choix_format_export, choix_donnees_export, donnees_prevision, donnees_kpi
+        # Checkbox pour les formats d'export
+        format_options = create_checkbox_group({
+            "export_format_csv": "CSV",
+            "export_format_pdf": "PDF",
+            "export_format_png": "PNG"
+        })
+
+    # 
+    return {
+        "donnees": donnees_options,
+        "formats": format_options
+    }
+
+
+
