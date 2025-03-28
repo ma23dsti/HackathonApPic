@@ -11,8 +11,8 @@ def chargement_donnees():
     # Récupérer le dossier où se trouve Chargement.py
     script_dir = os.path.dirname(__file__)
     # Ajouter chemin vers resultats/donnees_a_la_volee/resultats.json
-    #file_path = os.path.join(script_dir, '..', 'resultats/donnees_a_la_volee', 'resultats.json')
-    file_path = os.path.join(script_dir, '..', 'resultats/donnees_a_la_volee', 'resultats_augmente.json')
+    file_path = os.path.join(script_dir, '..', 'resultats/donnees_a_la_volee', 'resultats.json')
+    #file_path = os.path.join(script_dir, '..', 'resultats/donnees_a_la_volee', 'resultats_augmente.json')
     # Normalisation du chemin
     file_path = os.path.abspath(file_path)
     #chargement fichier

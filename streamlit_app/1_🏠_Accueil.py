@@ -59,7 +59,7 @@ def show():
 
     # Ajouter les autres options dans ce dictionnaire
     unite_mesure_options = [
-        "Octets",
+        "Octets/s",
         "Bits/s"
     ]
     unite_mesure = st.selectbox("Unité de mesure", options=unite_mesure_options, index=None, placeholder="Choisis une option")
