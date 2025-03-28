@@ -76,6 +76,8 @@ def display_menu():
         user_choices.append(f"**Taille de la fenêtre :** *{st.session_state.taille_fenetre}*")
     if 'nombre_predictions' in st.session_state:
         user_choices.append(f"**Nombre de prédictions :** *{st.session_state.nombre_predictions}*")
+    if 'unite_mesure' in st.session_state:
+        user_choices.append(f"**Unité de mesure :** *{st.session_state.unite_mesure}*")
 
     st.sidebar.markdown("\n".join(f"- {choice}" for choice in user_choices))
 
