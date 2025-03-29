@@ -74,9 +74,11 @@ def export_data_zip(resultat_df, kpi_df, export_options, fig, tab, titre_graphe,
             y_position -= 10
 
             # Génération de l'image du tableau
-            tab_buffer = io.BytesIO()
-            pio.write_image(tab, tab_buffer, format="png")
-            tab_buffer.seek(0)
+            tab_bytes = pio.to_image(tab, format="png", engine="kaleido")
+            tab_buffer = io.BytesIO(tab_bytes)
+            #tab_buffer = io.BytesIO()
+            #pio.write_image(tab, tab_buffer, format="png")
+            #tab_buffer.seek(0)
 
             pdf_rapport.drawImage(ImageReader(tab_buffer), 100, y_position - 200, width=400, height=200)
 
