@@ -107,6 +107,7 @@ def check_data(test_data: pd.DataFrame, train_data: pd.DataFrame, horizon: int, 
 
     #Reshape 
     df_test = pd.DataFrame(test_data['debit'].values.reshape(1, -1))
+    time_test = test_data[["Time"]]
 
     #Vérifier que les données de test soit différentes des données de train 
     check_similarity(train_data, df_test)
@@ -117,10 +118,12 @@ def check_data(test_data: pd.DataFrame, train_data: pd.DataFrame, horizon: int, 
     print("Sauvegarde du fichier preprocess :")
 
     name_file_x_test = f"{preprocess_dir}_x_test_o{shape}_p{horizon}.csv"
+    name_file_time_test = f"{preprocess_dir}_time_test_o{shape}_p{horizon}.csv"
 
     df_test.to_csv(name_file_x_test, index=False,header=False)
+    time_test.to_csv(name_file_x_test, index=False,header=False)
     
-    print(f"Fichiers sauvegardés: {name_file_x_test} ")
+    print(f"Fichiers sauvegardés: {name_file_x_test} \n {name_file_x_test} ")
 
-    return True 
+    return True
 

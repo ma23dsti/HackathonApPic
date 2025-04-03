@@ -47,7 +47,7 @@ from sklearn.model_selection import train_test_split
 
 # Pour check les trou avec purc_valid_jeu , se baser sur les time diff et pas que sur le nombre de check et faire check * time_diff / temps total du dataset 
 
-def reprocesser_les_donnees(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shape = 60, sliding_window = 65):
+def repreprocesser_les_donnees(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shape = 60, sliding_window = 65):
 
     print("Vérification et conversion des types")
     # Vérification et conversion des types
@@ -55,10 +55,10 @@ def reprocesser_les_donnees(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=
         df["Time"] = pd.to_datetime(df["Time"], format="%Y-%m-%d %H:%M:%S")
     except Exception:
         raise ValueError("Les données doivent être sous le format YYYY-MM-dd hh:mm:ss")
-
+    
     if not np.issubdtype(df["debit"].dtype, np.integer):
         raise ValueError("Les données doivent être sous forme d'entiers")
-
+    
     print("Agréger les valeurs si plusieurs appartiennent à la même seconde")
     # Agréger les valeurs si plusieurs appartiennent à la même seconde
     df = df.groupby(df["Time"]).agg({"debit": "sum"}).reset_index()
@@ -143,22 +143,24 @@ def reprocesser_les_donnees(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=
     print("Reshape des données")
     print("Sliding windows : ",sliding_window)
     valid_sequences = []
+    time_sequence = []
     size = shape + horizon
     for i in range(0, len(df), sliding_window):
         segment = df.iloc[i : i + size]
         if segment["Check"].sum() == 0:
+            time_sequence.append(segment["Time"].values)
             valid_sequences.append(segment["debit"].values)
-    reprocesser_les_donnees = pd.DataFrame(valid_sequences)
+    preprocess_data = pd.DataFrame(valid_sequences)
 
     # On enleve la derniere ligne si elle n'est pas complète
-    clean_data = reprocesser_les_donnees.dropna()
+    clean_data = preprocess_data.dropna()
 
     X = clean_data.iloc[:, :shape]
     y = clean_data.iloc[:, shape:]
 
     print("Reshape des données terminées")
 
-    return X, y
+    return X, y, time_sequence
 
 
 
@@ -186,10 +188,9 @@ def check_similarity(x_train: pd.DataFrame, x_valid: pd.DataFrame,  threshold: f
 
 
 def preprocesser_les_donnees(preprocess_dir : str, df: DataFrame, horizon=5, 
-        split = 1-2080027/2398267,    #0.13269581: répartition train/test utilisé lors de la phase 1 (2398267 = 2080027 + 318240)
-        ecart_debit_max=30, 
-        purc_valid_jeu=0.4, 
-        sliding_window_train = 13, sliding_window_valid = 65):
+    split =0.13269581,  ecart_debit_max=30, 
+    purc_valid_jeu=0.4, 
+    sliding_window_train = 13, sliding_window_valid = 65)-> None:
 
     # Mapping horizon to shape
     horizon_mapping = {1: 12, 5: 60, 30: 90, 60: 120, 300: 190}
@@ -251,10 +252,10 @@ def preprocesser_les_donnees(preprocess_dir : str, df: DataFrame, horizon=5,
     check_similarity(X_train, X_valid)
 
 
-    name_file_x_train = f"{preprocess_dir}x_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
-    name_file_y_train = f"{preprocess_dir}y_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
-    name_file_x_valid = f"{preprocess_dir}x_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
-    name_file_y_valid = f"{preprocess_dir}y_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
+    name_file_x_train = f"{preprocess_dir}_x_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
+    name_file_y_train = f"{preprocess_dir}_y_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
+    name_file_x_valid = f"{preprocess_dir}_x_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
+    name_file_y_valid = f"{preprocess_dir}_y_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
 
 
     X_train.to_csv(name_file_x_train, index=False,header=False)
