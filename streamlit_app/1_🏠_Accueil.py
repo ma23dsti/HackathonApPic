@@ -13,10 +13,10 @@ def show():
     # Initialiser st.session_state
     if 'choix_modele' not in st.session_state:
         st.session_state['choix_modele'] = None
-    if 'taille_fenetre' not in st.session_state:
-        st.session_state['taille_fenetre'] = None
-    if 'nombre_predictions' not in st.session_state:
-        st.session_state['nombre_predictions'] = None
+    if 'taille_fenetre_observee' not in st.session_state:
+        st.session_state['taille_fenetre_observee'] = None
+    if 'horizon_predictions' not in st.session_state:
+        st.session_state['horizon_predictions'] = None
 
     # Question pour l'utilisateur
     choix_modele_options = {
@@ -41,17 +41,64 @@ def show():
         index=None
     )
 
+    # Structure des modèles par défaut
+    taille_fenetre_a_predire_mapping = {
+        "taille_fenetre_a_predire": {
+            1: {
+                "taille_fenetre_observee": 12,
+                "taille_pas_glissant_train": 13,
+                "taille_pas_glissant_valid": 13
+            },
+            5: {
+                "taille_fenetre_observee": 60,
+                "taille_pas_glissant_train": 13,
+                "taille_pas_glissant_valid": 65
+            },
+            30: {
+                "taille_fenetre_observee": 300,
+                "taille_pas_glissant_train": 13,
+                "taille_pas_glissant_valid": 65
+            },
+            60: {
+                "taille_fenetre_observee": 400,
+                "taille_pas_glissant_train": 13,
+                "taille_pas_glissant_valid": 65
+            },
+            300: {
+                "taille_fenetre_observee": 500,
+                "taille_pas_glissant_train": 13,
+                "taille_pas_glissant_valid": 65
+            }
+        }
+    }
+    if 'taille_fenetre_a_predire_mapping' not in st.session_state:
+        st.session_state['taille_fenetre_a_predire_mapping'] = taille_fenetre_a_predire_mapping
+
     # Options pour la taille de la fenêtre et le nombre de prédictions
+    # Extraire les clés de "taille_fenetre_a_predire"
+    cles = list(taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"].keys())
+
     options_combinees = {
-        "5 prédictions / 60 secondes": (5, 60),
-        "30 prédictions / 360 secondes": (30, 360),
-        "60 prédictions / 720 secondes": (60, 720),
-        "300 prédictions / 3600 secondes": (300, 3600)
+        "{} point à prédire / {} observations".format(
+    cles[0], taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][cles[0]]["taille_fenetre_observee"]
+): (cles[0], taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][cles[0]].values()),
+        "{} points à prédire / {} observations".format(
+    cles[1], taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][cles[1]]["taille_fenetre_observee"]
+): (cles[1], taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][cles[1]].values()),
+        "{} points à prédire / {} observations".format(
+    cles[2], taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][cles[2]]["taille_fenetre_observee"]
+): (cles[2], taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][cles[2]].values()),
+        "{} points à prédire / {} observations".format(
+    cles[3], taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][cles[3]]["taille_fenetre_observee"]
+): (cles[3], taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][cles[3]].values()),
+        "{} points à prédire / {} observations".format(
+    cles[4], taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][cles[4]]["taille_fenetre_observee"]
+): (cles[4], taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][cles[4]].values())
     }
 
     # Afficher les options dans une seule selectbox
     option_select = st.selectbox(
-        "Choisissez le nombre de prédictions et la taille de la fenêtre",
+        "Choisissez le nombre de points à prédire et la taille de la fenêtre observée",
         options=list(options_combinees.keys()),
         index=None,
         placeholder="Choisissez une option"
@@ -59,8 +106,8 @@ def show():
 
     # Ajouter les autres options dans ce dictionnaire
     unite_mesure_options = [
-        "Octets/s",
-        "Bits/s"
+        "Bits/s",
+        "Octets/s"
     ]
     unite_mesure = st.selectbox("Unité de mesure", options=unite_mesure_options, index=None, placeholder="Choisis une option")
 
@@ -75,9 +122,11 @@ def show():
             st.error("Veuillez choisir une option valide pour le nombre de prédictions et la taille de la fenêtre.")
         else:
             st.session_state['choix_modele'] = choix_modele_options[choix_modele]
-            st.session_state['taille_fenetre'] = options_combinees[option_select][1]
-            st.session_state['nombre_predictions'] = options_combinees[option_select][0]
+            st.session_state['taille_fenetre_observee'] = list(options_combinees[option_select][1])[0]
+            st.session_state['horizon_predictions'] = options_combinees[option_select][0]
             st.session_state['unite_mesure'] = unite_mesure
+            st.session_state['sliding_window_train'] = st.session_state.taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][st.session_state.horizon_predictions]["taille_pas_glissant_train"]
+            st.session_state['sliding_window_valid'] = st.session_state.taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][st.session_state.horizon_predictions]["taille_pas_glissant_valid"]
             st.session_state.valid_acceuil = True
             st.rerun()
         
@@ -91,7 +140,7 @@ if __name__ == "__main__":
 
     # Initialiser st.session_state sinon display_menu() ne fonctionnera pas
     # Liste des clés à initialiser
-    key_user_choices = ['choix_modele', 'taille_fenetre', 'nombre_predictions', 'unite_mesure']
+    key_user_choices = ['choix_modele', 'taille_fenetre_observee', 'horizon_predictions', 'unite_mesure']
     keys_to_initialize = ['valid_acceuil', 'valid_depot_donnees', 'valid_entrainement', 'valid_predictions', 'valid_statistiques']
 
     # Initialisation des clés dans st.session_state

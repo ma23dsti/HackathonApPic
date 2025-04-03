@@ -9,21 +9,27 @@ import torch.nn as nn
 class BiLSTMModel(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(BiLSTMModel, self).__init__()
-        self.fc1 = nn.Linear(input_size, 1000)
+        self.fc1 = nn.Linear(input_size, 1024)
         self.relu = nn.ReLU()
-        self.bilstm = nn.LSTM(500, hidden_size, bidirectional=True, batch_first=True, num_layers=2)
-        self.bilstm = nn.LSTM(500, hidden_size, bidirectional=True, batch_first=True, num_layers=2)
-        self.bilstm = nn.LSTM(500, hidden_size, bidirectional=True, batch_first=True, num_layers=2)
+        self.bilstm = nn.LSTM(512, hidden_size, bidirectional=True, batch_first=True, num_layers=2)
+        self.bilstm = nn.LSTM(512, hidden_size, bidirectional=True, batch_first=True, num_layers=2)
+        self.bilstm = nn.LSTM(512, hidden_size, bidirectional=True, batch_first=True, num_layers=2)
         self.fc2 = nn.Linear(hidden_size * 2, output_size)  # *2 for bidirectional LSTM
 
     def forward(self, x):
         x = self.relu(self.fc1(x))
-        x = x.view(-1, 2, 500)  # Adjust based on input
+        x = x.view(-1, 2, 512)  # Adjust based on input
         x, _ = self.bilstm(x)
         x = x[:, -1, :]
         return self.fc2(x)
 
 def predire_le_traffic(donnees_observees):
+
+    # Ensure donnees_observees is converted to a NumPy array if it's not already
+    if isinstance(donnees_observees, list):
+        donnees_observees = np.array(donnees_observees)
+    elif isinstance(donnees_observees, dict):
+        raise TypeError("donnees_observees must not be a dictionary. Convert it to a list or NumPy array.")
 
     # Charger le modèle et ses hyperparamètres.
 

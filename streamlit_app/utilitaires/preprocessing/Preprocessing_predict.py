@@ -66,10 +66,10 @@ def check_data(test_data: pd.DataFrame, train_data: pd.DataFrame, horizon: int, 
     """
 
     # Mapping horizon to shape
-    horizon_mapping = {1: 12, 5: 60, 30: 90, 60: 120, 300: 190}
+    horizon_mapping = {1: 12, 5: 60, 30: 300, 60: 400, 300: 500}
     shape = horizon_mapping[horizon]
     if horizon not in horizon_mapping:
-        raise ValueError("Horizon doit valoir 1, 5, 10, 60 ou 300")
+        raise ValueError("Horizon doit valoir 1, 5, 30, 60 ou 300")
 
     # Vérification des paramètres : 
     if not isinstance(test_data, pd.DataFrame):

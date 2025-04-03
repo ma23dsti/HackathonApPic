@@ -16,6 +16,12 @@ preprocessing_dir = "streamlit_app/static/donnees/donnees_preprocessees/"
 donnees_a_la_volee_dir = os.path.join(preprocessing_dir, "donnees_a_la_volee/")
 resultats_a_la_volee_dossier = "streamlit_app/resultats/donnees_a_la_volee/"
 
+# Récupérer les différentes tailles nécessaires pour les validations
+horizon = st.session_state.horizon_predictions
+taille_fenetre_observee = st.session_state.taille_fenetre_observee
+sliding_window_train = st.session_state.sliding_window_train
+sliding_window_valid = st.session_state.sliding_window_valid
+
 def show():
     
     st.title("Dépot, Validation et Prétraitement des Données")
@@ -56,19 +62,21 @@ def show():
         else:
             print("Le dossier 'resultats/donnees_a_la_volee/' n'existe pas.")
 
-    st.write("Veuillez entrer les données pour les 60 dernières secondes:")
+    st.write("Veuillez entrer les données pour les ", taille_fenetre_observee, " dernières secondes:")
 
     # Espace de dépôt des données d'entraînement
     uploaded_file = st.file_uploader("Déposez vos fichiers d'entraînement du modèle ici :", type=["csv", "txt"])
-
-    # Espace de dépôt des données de prédiction
-    uploaded_file_2 = st.file_uploader("Déposez vos fichiers de prédiction ici :", type=["csv", "txt"])
 
     # Lecture et affichage des données d'entraînement
     if uploaded_file is not None:
         try:
             input_data = pd.read_csv(uploaded_file)
-            st.write("Affichage d'un aperçu des données d'entrée pour l'entraînement :", input_data.head()) # vérifier le comportement avec un dataset volumineux
+            # Vérification des dimensions des data raw (Données du traffic réseau et du temps correspondant)
+            if input_data.shape[0] < 1 or input_data.shape[1] != 2:
+                st.error(f"Erreur : le fichier doit avoir 2 colonnes et au moins 1 ligne, mais a les dimensions suvantes : {input_data.shape}. Veuillez déposer un fichier valide.")
+                input_data = None  # Annulation du fichier chargé
+            else:
+                st.write("Affichage d'un aperçu des données d'entrée pour l'entraînement :", input_data.head())
         except Exception as e:
             st.error(f"Erreur lors de la lecture du fichier d'entraînement : {e}")
             input_data = None
@@ -76,24 +84,33 @@ def show():
         # Jeu de données par défaut afin de pouvoir effectuer des tests
         input_data = pd.read_csv(path_donnees_raw + "donnees_par_defaut/raw_train.csv")
         st.write(f"Format des données d'entrée par défaut - Nombre de lignes: {input_data.shape[0]:,}, Nombre de colonnes: {input_data.shape[1]}")
-        st.write("Apperçu des données d'entrée par défaut:", input_data[:5])
+        st.write("Apperçu des données d'entrée par défaut:", input_data.head())
+
+    # Espace de dépôt des données de prédiction
+    uploaded_file_2 = st.file_uploader("Déposez vos fichiers de prédiction ici :", type=["csv", "txt"])
 
     # Lecture et affichage des données de prédiction
     if uploaded_file_2 is not None:
         try:
             prediction_data = pd.read_csv(uploaded_file_2, header=None)
-            st.write("Affichage des données d'entrée pour la prédiction :", prediction_data)
+            # Vérification des dimensions des données observées afin de pouvoir effectuer la prédiction
+            expected_shape_2 = (1, taille_fenetre_observee)
+            if prediction_data.shape != expected_shape_2:
+                st.error(f"Erreur : le fichier doit avoir les dimension suivantes : {expected_shape_2}, mais a {prediction_data.shape}. Veuillez déposer un fichier valide.")
+                prediction_data = None  # Annulation du fichier chargé
+            else:
+                st.write("Affichage des données d'entrée pour la prédiction :", prediction_data)
         except Exception as e:
             st.error(f"Erreur lors de la lecture du fichier de prédiction : {e}")
             prediction_data = None
     else:
         # Données fictives pour les tests
-        prediction_data = np.random.rand(1, 60)
-        st.write("Données de prédiction fictives:", prediction_data)
+        prediction_data = np.random.rand(1, taille_fenetre_observee)
+        st.write("Données observées fictives:", prediction_data)
 
         # Jeu de données de test par défaut afin de pouvoir effectuer des tests
-        prediction_data = pd.read_csv(preprocessing_dir + "donnees_par_defaut/x_valid_s65_o60_p5-1.csv", header=None)
-        st.write(f"Format des données d'entrée par défaut pour la prédiction - Nombre de lignes: {prediction_data.shape[0]:,}, Nombre de colonnes: {input_data.shape[1]}")
+        prediction_data = pd.read_csv(preprocessing_dir + "donnees_par_defaut/x_valid_s" + str(sliding_window_valid) + "_o" + str(taille_fenetre_observee) + "_p" + str(st.session_state.horizon_predictions) + "-1.csv", header=None)
+        st.write(f"Format des données d'entrée par défaut pour la prédiction - Nombre de lignes: {prediction_data.shape[0]:,}, Nombre de colonnes: {prediction_data.shape[1]}")
         st.write("Apperçu des données d'entrée par défaut pour la prédiction:", prediction_data)
 
     # Bouton pour valider les données
@@ -107,7 +124,9 @@ def show():
                 # Preprocessing et Validation des données à utiliser pour l'entrainement
                 # Create the directory if it does not exist
                 os.makedirs(donnees_a_la_volee_dir, exist_ok=True)
-                preprocesser_les_donnees(donnees_a_la_volee_dir, input_data) 
+
+                preprocesser_les_donnees(donnees_a_la_volee_dir, input_data, horizon=horizon, sliding_window_train = sliding_window_train, sliding_window_valid = sliding_window_valid)
+                #preprocesser_les_donnees(donnees_a_la_volee_dir, input_data)
 
                 # Validation des données utilisées pour la prédiction
                 # Convert prediction_data to a DataFrame with a 'value' column

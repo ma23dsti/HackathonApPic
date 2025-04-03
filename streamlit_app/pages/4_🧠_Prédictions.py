@@ -18,6 +18,10 @@ def show():
     st.title("Prédictions")
     check_dependencies("Prédictions") 
 
+    # Tailles nécessaires pour la prédiction'
+    horizon = st.session_state.horizon_predictions
+    taille_fenetre_observee = st.session_state.taille_fenetre_observee
+
     # Si un import de fichier a été fait pour l'historique des données dont on veut effectuer la prédiction,
     # alors l'historique des précédentes prédictions (effectuées sur d'autres données) est effacé.
     if 'nouveau_depot_donnees' in st.session_state:
@@ -25,6 +29,24 @@ def show():
             st.session_state.resultats["resultats"]["predictions"].pop("modeles", None)
             # Besoin de supprimer les resultats dans la sous structure model_info egalement pour ne pas garder un lien avec les anciens resultats.
             st.session_state.model_info = []
+
+    # Date de la première observation dans la série des temps observés
+    if "date_premiere_observation" not in st.session_state:
+        st.session_state.date_premiere_observation = "2025-02-10 00:01:00"  # Default value
+
+    date_premiere_observation = st.text_input(
+        "Date de la première observation (format: YYYY-MM-DD HH:MM:SS)",
+        value=st.session_state.date_premiere_observation,
+        help="Entrez une date au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'."
+    )
+
+    # Validate the date format and update session state
+    try:
+        pd.to_datetime(date_premiere_observation, format="%Y-%m-%d %H:%M:%S")
+        st.session_state.date_premiere_observation = date_premiere_observation
+    except ValueError:
+        st.error("Erreur: La date doit être au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'.")
+        return
 
     # S'assurer que les données sont sous forme de DataFrame avec une colonne 'value'
     if not isinstance(st.session_state.prediction_data, pd.DataFrame) or 'value' not in st.session_state.prediction_data.columns:
@@ -38,7 +60,7 @@ def show():
             # Flatten and reshape to (1, 60) for model prediction
             prediction_data_reshaped = np.array(st.session_state.prediction_data).flatten().reshape(1, -1)
             # Ensure we have 60 features
-            if prediction_data_reshaped.shape[1] != 60: # hardcodé, à changer selon le nb de prédictions défini par l'utilisateur
+            if prediction_data_reshaped.shape[1] != taille_fenetre_observee:
                 st.error(f"Erreur: Le modèle attend 60 colonnes, mais {prediction_data_reshaped.shape[1]} ont été détectées.")
                 return
             predictions = predire_le_traffic(prediction_data_reshaped)
@@ -46,8 +68,8 @@ def show():
 
             predictions = np.array(predictions).flatten()
             # Check lengths to prevent errors
-            if len(predictions) != 5:  # Expected next 5 values in time series # hardcodé, à changer selon le nb de prédictions défini par l'utilisateur
-                st.error(f"Erreur: Le modèle a généré {len(predictions)} valeurs, mais 5 étaient attendues.") # hardcodé, à changer selon le nb de prédictions défini par l'utilisateur
+            if len(predictions) != horizon:  # Expected next horizon values in time series
+                st.error(f"Erreur: Le modèle a généré {len(predictions)} valeurs, mais 5 étaient attendues.")
                 return
 
             # Create predictions DataFrame
@@ -79,14 +101,24 @@ def show():
         donnees_predictions = st.session_state.resultats["resultats"]["predictions"]
         # Extraction des données observées
         x_observees = donnees_entrees["temps_relatif"]
-        y_observees = donnees_entrees["donnees_observees"]        
+        y_observees = donnees_entrees["donnees_observees"]["en_unite_mesure"]  # Access "en_unite_mesure"
+
+        # Ensure x_observees and y_observees are lists or NumPy arrays
+        x_observees = np.array(x_observees) if isinstance(x_observees, list) else x_observees
+        y_observees = np.array(y_observees) if isinstance(y_observees, list) else y_observees
+
+        # Transform unhashable types in y_observees
+        y_observees = [str(val) if isinstance(val, dict) else val for val in y_observees]
+        # Convert y_observees to NumPy array
+        y_observees = np.array(y_observees)
+
         # Extraction des données prédites
         x_predictions = donnees_predictions["temps_relatif"]
         modeles = donnees_predictions["modeles"]
 
         # Afficher la prédiction du dernier modèle entrainé.
         plt.figure(figsize=(12, 6))
-        plt.plot(x_observees, y_observees, label="Données observées", color="blue", linestyle="-")
+        plt.plot(x_observees, y_observees , label="Données observées", color="blue", linestyle="-")
         #plt.plot(st.session_state.prediction_data.index, st.session_state.prediction_data['value'], label="Données d'entrée", color='blue')
         if 'entrainement_modele' in st.session_state:
             if st.session_state.entrainement_modele==True:
@@ -128,7 +160,13 @@ def show():
         # Ajouter le rouge comme dernière couleur pour le modèle moyen
         couleurs.append("#ff0000")  # La dernière couleur est le rouge
         for i, modele in enumerate(modeles):
-            plt.plot(x_predictions, modele["donnees_predites"], label=f'Prédictions - {modele["nom"]} - NRMSE {modele["kpi"]["nrmse"]:.4f}', color=couleurs[i % len(couleurs)], linestyle="--")
+            plt.plot(
+                x_predictions,
+                modele["donnees_predites"]["en_unite_mesure"],  # Access "en_unite_mesure"
+                label=f'Prédictions - {modele["nom"]} - NRMSE {modele["kpi"]["nrmse"]:.4f}',
+                color=couleurs[i % len(couleurs)],
+                linestyle="--"
+            )
         # Ajouter une ligne verticale pour séparer observations et prédictions
         plt.axvline(x=max(x_observees), color="black", linestyle="--")
         plt.xlabel("Temps relatif")

@@ -89,10 +89,10 @@ def display_menu():
         user_choices.append(f"**Option sélectionnée :** *{choix_modele_descriptions.get(st.session_state.choix_modele, 'Aucune')}*")
 
     # Afficher la taille de la fenêtre et le nombre de prédictions
-    if 'taille_fenetre' in st.session_state:
-        user_choices.append(f"**Taille de la fenêtre :** *{st.session_state.taille_fenetre}*")
-    if 'nombre_predictions' in st.session_state:
-        user_choices.append(f"**Nombre de prédictions :** *{st.session_state.nombre_predictions}*")
+    if 'taille_fenetre_observee' in st.session_state:
+        user_choices.append(f"**Taille de la fenêtre :** *{st.session_state.taille_fenetre_observee}*")
+    if 'horizon_predictions' in st.session_state:
+        user_choices.append(f"**Nombre de prédictions :** *{st.session_state.horizon_predictions}*")
     if 'unite_mesure' in st.session_state:
         user_choices.append(f"**Unité de mesure :** *{st.session_state.unite_mesure}*")
 
