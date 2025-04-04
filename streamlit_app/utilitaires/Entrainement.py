@@ -1,15 +1,17 @@
+import joblib
+import json
 import os
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import streamlit as st
-
 import numpy as np
 import random
+import shutil
 import torch
 import torch.nn as nn
 import torch.optim as optim
 #from IPython.display import clear_output
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 import matplotlib.pyplot as plt
 #import mplcursors
 
@@ -22,11 +24,7 @@ def set_seed(seed):
     random.seed(seed)
 set_seed(42)
 
-st.session_state.entrainement_modele=True
-
-# Custom callback to plot training and validation loss during training
-
-# Custom Training Monitor
+# Custom Training Monitor callback to plot training and validation loss during training
 class TrainingMonitorNotebook:
     def __init__(self):
         self.train_loss = []
@@ -55,63 +53,119 @@ class TrainingMonitorNotebook:
 # Instantiate the monitor
 training_monitor_notebook = TrainingMonitorNotebook()
 
-# BiLSTM Model
-class BiLSTMModel(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(BiLSTMModel, self).__init__()
-        self.fc1 = nn.Linear(input_size, 1024)
-        self.relu = nn.ReLU()
-        self.bilstm = nn.LSTM(512, hidden_size, bidirectional=True, batch_first=True, num_layers=2)
-        self.bilstm = nn.LSTM(512, hidden_size, bidirectional=True, batch_first=True, num_layers=2)
-        self.bilstm = nn.LSTM(512, hidden_size, bidirectional=True, batch_first=True, num_layers=2)
-        self.fc2 = nn.Linear(hidden_size * 2, output_size)  # *2 for bidirectional LSTM
-
-    def forward(self, x):
-        x = self.relu(self.fc1(x))
-        x = x.view(-1, 2, 512)  # Adjust based on input
-        x, _ = self.bilstm(x)
-        x = x[:, -1, :]
-        return self.fc2(x)
-
-# Model Parameters
-input_size = 60
-hidden_size = 10
-output_size = 5  
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = BiLSTMModel(input_size, hidden_size, output_size).to(device)
-
-# Loss and Optimizer
-criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-
 
 def entrainer_le_modèle(dossier_donnees):
+
+    # Tailles nécessaires pour l'entrainement'
+    horizon = st.session_state.horizon_predictions
+    taille_fenetre_observee = st.session_state.taille_fenetre_observee
+    sliding_window_train = st.session_state.sliding_window_train
+    sliding_window_valid = st.session_state.sliding_window_valid
+
+    # Dossier du modèle par défaut
+    dossier_modele_par_defaut = f"streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_restreint_o{taille_fenetre_observee}_p{horizon}/"
+    # Récupérer les fichiers du modèle par défaut à utiliser pour l'entrainement
+    fichiers_modele_par_defaut = ["modele.pth", "modele_parametres.json", "x_scaler.pkl", "y_scaler.pkl"]
+    dossier_modele_parent = os.path.dirname(os.path.dirname(dossier_modele_par_defaut)) + "/"  # Récupère le dossier parent
+
+    # Copier chaque fichier dans le dossier parent
+    for fichier in fichiers_modele_par_defaut:
+        chemin_source = os.path.join(dossier_modele_par_defaut, fichier)
+        chemin_destination = os.path.join(dossier_modele_parent, fichier)
+
+        # Vérifier si le fichier existe dans le dossier de destination et le supprimer
+        if os.path.exists(chemin_destination):
+            os.remove(chemin_destination)
+            print(f"Supprimé : {chemin_destination}")
+
+        # Vérifier si le fichier source existe avant la copie
+        if os.path.exists(chemin_source):  
+            shutil.copy(chemin_source, chemin_destination)
+            print(f"Copié : {fichier} → {chemin_destination}")
+        else:
+            print(f"Fichier introuvable : {chemin_source}")
+
+    # Architecture du modèle par défaut utilisé : BiLSTM
+    class BiLSTMModel(nn.Module):
+        def __init__(self, input_size, hidden_size, output_size):
+            super(BiLSTMModel, self).__init__()
+            self.fc1 = nn.Linear(input_size, 1024)
+            self.relu = nn.ReLU()
+            self.bilstm = nn.LSTM(512, hidden_size, bidirectional=True, batch_first=True, num_layers=2)
+            self.bilstm = nn.LSTM(512, hidden_size, bidirectional=True, batch_first=True, num_layers=2)
+            self.bilstm = nn.LSTM(512, hidden_size, bidirectional=True, batch_first=True, num_layers=2)
+            self.fc2 = nn.Linear(hidden_size * 2, output_size)  # *2 for bidirectional LSTM
+
+        def forward(self, x):
+            x = self.relu(self.fc1(x))
+            x = x.view(-1, 2, 512)  # Adjust based on input
+            x, _ = self.bilstm(x)
+            x = x[:, -1, :]
+            return self.fc2(x)
+
+    # Charger le modèle préentrainé et ses hyperparamètres.
+    with open(dossier_modele_parent + "modele_parametres.json", "r") as f:
+        params = json.load(f)
+
+    loaded_input_size = params["input_size"]
+    loaded_hidden_size = params["hidden_size"]
+    loaded_output_size = params["output_size"]
+
+    # Reconstruire l'architecture du modèle à utiliser
+    loaded_model = BiLSTMModel(loaded_input_size, loaded_hidden_size, loaded_output_size).to(device)
+    # Charger les poids du modèle préentrainé
+    loaded_model.load_state_dict(torch.load(dossier_modele_parent + "modele.pth", map_location=device))
+    # Affecter le modèle par défaut préentrainé pour utilisation
+    model = loaded_model
+    # model.eval()  # Set model to evaluation mode
+    # Chargement du modèle par défaut non préentrainé
+    #model = BiLSTMModel(input_size, hidden_size, output_size).to(device)
+
+    # Loss and Optimizer
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+    horizon = st.session_state.horizon_predictions
+    taille_fenetre_observee = st.session_state.taille_fenetre_observee
+    sliding_window_train = st.session_state.sliding_window_train
+    sliding_window_valid = st.session_state.sliding_window_valid
+
     if len(os.listdir(dossier_donnees)) > 0:
-        # Liste tous les fichiers dans le dossier
+        # Liste des fichiers nécessaires à l'entrainement
+        nom_fichier_x_train = f"x_train_s{sliding_window_train}_o{taille_fenetre_observee}_p{horizon}.csv"
+        nom_fichier_y_train = f"y_train_s{sliding_window_train}_o{taille_fenetre_observee}_p{horizon}.csv"
+        nom_fichier_x_valid = f"x_valid_s{sliding_window_valid}_o{taille_fenetre_observee}_p{horizon}.csv"
+        nom_fichier_y_valid = f"y_valid_s{sliding_window_valid}_o{taille_fenetre_observee}_p{horizon}.csv"
+        noms_fichiers_entrainements = [nom_fichier_x_train, nom_fichier_y_train, nom_fichier_x_valid, nom_fichier_y_valid]
+
+        # Liste de tous les fichiers dans le dossier
         fichiers = [f for f in os.listdir(dossier_donnees) if os.path.isfile(os.path.join(dossier_donnees, f))]
-        st.write("Entraînement avec les fichiers suivants en cours ...", )
-        # Affiche la liste des fichiers
-        for fichier in fichiers:
-            st.write(fichier)
+        # Vérifier que tous les fichiers nécessaires à l'entrainement sont présents et les afficher
+        fichiers_manquants = [f for f in noms_fichiers_entrainements if f not in fichiers]
+        if fichiers_manquants:
+            st.write(f"Les fichiers suivants sont manquants : {fichiers_manquants}")
+        else:
+            st.write("Entraînement avec les fichiers suivants en cours ...")
+            for fichier in noms_fichiers_entrainements:
+                st.write(fichier)
         
         # Load the CSV files
-        x_train = pd.read_csv(dossier_donnees + "x_train_s13_o60_p5.csv", header=None)
-        y_train = pd.read_csv(dossier_donnees + "y_train_s13_o60_p5.csv", header=None)
-        x_valid = pd.read_csv(dossier_donnees + "x_valid_s65_o60_p5.csv", header=None)
-        y_valid = pd.read_csv(dossier_donnees + "y_valid_s65_o60_p5.csv", header=None)
+        x_train = pd.read_csv(dossier_donnees + nom_fichier_x_train, header=None)
+        y_train = pd.read_csv(dossier_donnees + nom_fichier_y_train, header=None)
+        x_valid = pd.read_csv(dossier_donnees + nom_fichier_x_valid, header=None)
+        y_valid = pd.read_csv(dossier_donnees + nom_fichier_y_valid, header=None)
 
         min_y_val = y_valid.values.min()
         max_y_val = y_valid.values.max()
 
         # StandardScaler rescaling
-        # For x_train and x_valid (60 features)
+        # For x_train and x_valid (st.session_state.taille_fenetre_observee features)
         x_scaler = StandardScaler()
         x_train_StandardScaler = x_scaler.fit_transform(x_train)
         x_valid_StandardScaler = x_scaler.transform(x_valid)
 
-        # For y_train and y_valid (5 features)
+        # For y_train and y_valid (st.session_state.horizon_predictions features)
         y_scaler = StandardScaler()
         y_train_StandardScaler = y_scaler.fit_transform(y_train)
         y_valid_StandardScaler = y_scaler.transform(y_valid)
@@ -129,17 +183,23 @@ def entrainer_le_modèle(dossier_donnees):
 
         #st.write(y_valid_standardized)
 
-
-
         # Training Parameters
-        epochs = 10
-        batch_size = 2048
+        epochs = 5
+        batch_size = 1024
 
         # Create a Streamlit placeholder for the plot
         plot_placeholder = st.empty()
 
         # Training Loop with Time Series Handling (No Shuffling)
         for epoch in range(epochs):
+            # Shuffle les données d'entrainement après chaque epoch.
+            # Le shuffling est essfectué entre portions de série temporelle pour un meilleur apprentissage,
+            # et non entre toutes les données brutes unitaires pour ne pas supprimer les liens de la série temporelle.
+            indices = np.arange(len(x_train_tensor))
+            np.random.shuffle(indices)
+            x_train_tensor = x_train_tensor[indices]
+            y_train_tensor = y_train_tensor[indices]
+
             model.train()
 
             epoch_loss = 0
@@ -194,25 +254,75 @@ def entrainer_le_modèle(dossier_donnees):
 
         # Move val_outputs to CPU, then convert to NumPy and perform inverse scaling
         y_pred = y_scaler.inverse_transform(val_outputs.cpu().numpy()).astype(int)
-        #y_pred = scaler.inverse_transform(val_outputs.cpu().numpy()).astype(int)
-
-        print("y_pred.shape: ", y_pred.shape, "\n")
-
-        print(y_pred[:4])
-
-        print("\ny_pred.min(): ",y_pred.min())
 
         # Replace all negative values with zero
         y_pred = np.where(y_pred < 0, 0, y_pred)
 
-        # Calculate RMSE
-        rmse = np.sqrt(mean_squared_error(y_valid, y_pred))
-        print(f'Validation RMSE: {rmse}')
-
-        # Calculate nRMSE
+        # Calculer le nRMSE
         nrmse_KPI = np.sqrt(mean_squared_error(y_valid, y_pred))/(max_y_val-min_y_val)
-        st.write(f'VMSE: {nrmse_KPI}')
+        st.write(f'NRMSE: {nrmse_KPI}')
         st.session_state.nrmse_value = nrmse_KPI
+
+        # Calculer le RMSE
+        rmse_KPI = np.sqrt(mean_squared_error(y_valid, y_pred))
+        st.write(f'RMSE: {rmse_KPI}')
+        st.session_state.rmse_value = rmse_KPI
+
+        # Calculer le MAE
+        mae_KPI = round(mean_absolute_error(y_valid, y_pred), 5)
+        st.write(f'MAE: {mae_KPI}')
+        st.session_state.mae_value = mae_KPI
+
+        # Ensure st.session_state.model_info is initialized
+        if "model_info" not in st.session_state:
+            st.session_state.model_info = []
+
+        # Update resultats.json structure
+        conversion_factor = st.session_state.conversion_factor if "conversion_factor" in st.session_state else 1
+        resultats = {
+            "donnees_entrees": {
+                "donnees_observees": {
+                    "en_unite_mesure": y_valid.to_numpy().flatten().tolist(),  # Convert to NumPy array before flattening
+                    "en_unite_mesure_2": (y_valid.to_numpy().flatten() * conversion_factor).tolist()  # Convert to NumPy array before flattening
+                }
+            },
+            "resultats": {
+                "predictions": {
+                    "modeles": [
+                        {
+                            **modele,
+                            "donnees_predites": {
+                                "en_unite_mesure": y_pred.flatten().tolist(),
+                                "en_unite_mesure_2": (y_pred.flatten() * conversion_factor).tolist()
+                            }
+                        }
+                        for modele in st.session_state.model_info
+                    ]
+                }
+            }
+        }
+
+        # Mettre à jour le modèle courant avec celui finetuné
+        #Enregistrer les poids
+        torch.save(model.state_dict(), dossier_modele_parent + "modele.pth")
+
+        # Save scalers
+        joblib.dump(x_scaler, dossier_modele_parent + "x_scaler.pkl")
+        joblib.dump(y_scaler, dossier_modele_parent + "y_scaler.pkl")
+
+        # Save model parameters (input_size, hidden_size, output_size, kpi)
+        params = {
+            "input_size": loaded_input_size,
+            "hidden_size": loaded_hidden_size,
+            "output_size": loaded_output_size,
+            "kpi": {
+                "mae": mae_KPI,
+                "nrmse": nrmse_KPI,
+                "rmse": rmse_KPI
+            }
+        }
+        with open(dossier_modele_parent + "modele_parametres.json", "w") as f:
+            json.dump(params, f)
 
     else:
         st.write("Aucun fichier validé disponible. Procédez au dépot et à la validation des données avant.")

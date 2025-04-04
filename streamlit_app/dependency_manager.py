@@ -41,6 +41,7 @@ page_names = {
 }
 
 def check_dependencies(page_name):
+    # Permet de vérifier si les conditions de la page précedente sont remplies avant d'afficher la page en cours
     # Obtenir les dépendances en fonction de choix_modele
     dependencies = dependencies_by_choice.get(st.session_state.choix_modele, {}).get(page_name, [])
     for dependency in dependencies:

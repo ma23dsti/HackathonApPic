@@ -30,9 +30,9 @@ from sklearn.model_selection import train_test_split
 # Si la colonne Check contient plus de x% de valeur égales à 1 (x étant une données d'entrée par l'utilisateur, compris entre 0 et 1) raise une nouvelle erreur : 'les données ne sont pas aggrégées à la seconde ou contiennent des valeures avec trop d'écart, veuillez essayer un nouveau jeu de données.'
 
 # 6 : Reshape les données :
-# Un paramètre horizon sera en entrée avec 5 valeurs possibles  : 1 seconde, 5 secondes, 10 secondes, 60 secondes ou 300 secondes.
+# Un paramètre horizon sera en entrée avec 5 valeurs possibles  : 1 seconde, 5 secondes, 30 secondes, 60 secondes ou 300 secondes.
 # Un mapping sera définit en amont de la fonction selon chaque valeurs d'horizon une valeur shape sera définit :
-# valeur horizon:shape   1: 12, 5:60, 10:90, 60:120, 300:190.
+# valeur horizon:shape   1: 12, 5:60, 30:300, 60:400, 300:500.
 # Selon la valeur de shape il faudra reshape les données avec la valeur de shape+horizon comme nombre de colonne.
 # Attention il faudra s'assurer que les données reshape au sein d'une même ligne ne contiennent aucune valeur de check égale à 1.
 # Si une valeur check =1 est trouvé, il faudra trouver une oublier cette séquence et trouver une prochaine séquence possible sans aucun check = 1
@@ -192,7 +192,7 @@ def preprocesser_les_donnees(preprocess_dir : str, df: DataFrame, horizon=5,
         sliding_window_train = 13, sliding_window_valid = 65):
 
     # Mapping horizon to shape
-    horizon_mapping = {1: 12, 5: 60, 30: 90, 60: 120, 300: 190}
+    horizon_mapping = {1: 12, 5: 60, 30: 300, 60: 400, 300: 500}
 
     # Vérification des paramètres : 
     if not isinstance(df, DataFrame):
@@ -200,12 +200,10 @@ def preprocesser_les_donnees(preprocess_dir : str, df: DataFrame, horizon=5,
     if not isinstance(preprocess_dir, str):
         raise TypeError("preprocess_dir doit être une chaîne de caractères.")
 
-
     if horizon not in horizon_mapping:
-        raise ValueError("Horizon doit valoir 1, 5, 10, 60 ou 300")
+        raise ValueError("Horizon doit valoir 1, 5, 30, 60 ou 300")
     shape = horizon_mapping[horizon]
     size = shape+horizon
-
 
     if split > 1 or split <= 0:
         raise ValueError("Le split doit etre compris entre 0 et 1")
