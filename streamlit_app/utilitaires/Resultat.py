@@ -104,7 +104,7 @@ def mettre_a_jour_model_info(predictions, entrainement_modele=False):
         },
         "resultats": {
             "predictions": {
-                "temps_relatif": list(range(st.session_state.taille_fenetre_observee + 2, st.session_state.taille_fenetre_observee + 2 + st.session_state.horizon_predictions)),
+                "temps_relatif": list(range(st.session_state.taille_fenetre_observee + 1, st.session_state.taille_fenetre_observee + 1 + st.session_state.horizon_predictions)),
                 "temps_horaire": temps_horaire[st.session_state.taille_fenetre_observee:],
                 "modeles": [
                     {
