@@ -23,6 +23,19 @@ sliding_window_train = st.session_state.sliding_window_train
 sliding_window_valid = st.session_state.sliding_window_valid
 
 def show():
+    """
+    Page qui s'affiche lorsque l'utilisateur choisit une prédiction avec création d'un modèle.
+    Affiche l'interface de dépôt, validation et prétraitement des données.
+
+    Cette fonction permet aux utilisateurs de déposer des fichiers de données, de valider leur format et de les prétraiter pour l'entraînement et la prédiction.
+    Elle inclut également des boutons pour nettoyer les dossiers de validation et de résultats.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
     
     st.title("Dépot, Validation et Prétraitement des Données")
 

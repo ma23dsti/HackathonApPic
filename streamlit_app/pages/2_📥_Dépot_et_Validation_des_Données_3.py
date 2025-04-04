@@ -9,6 +9,21 @@ from dependency_manager import check_dependencies
 display_menu()
 
 def show():
+    """
+    Page qui s'affiche lorque l'utilisateur choisit de faire une prédiction avec un modèle à upload
+    Affiche l'interface de dépôt et validation des données.
+
+    Cette fonction permet aux utilisateurs de déposer un modèle au format PTH et des fichiers de prédiction,
+    de valider leur format et de les afficher. Elle inclut également des messages de validation pour guider
+    l'utilisateur à travers les étapes de dépôt et de validation.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+
     st.title("Dépot et Validation des Données")
 
     check_dependencies("Dépot et Validation des Données")

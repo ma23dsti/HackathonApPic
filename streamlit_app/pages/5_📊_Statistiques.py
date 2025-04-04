@@ -18,6 +18,20 @@ import tempfile
 display_menu()
 
 def show():
+    """
+    Affiche l'interface des statistiques.
+
+    Cette fonction permet aux utilisateurs de sélectionner des paramètres, de visualiser des graphiques et des tableaux,
+    et d'exporter les résultats sous forme de fichier ZIP. Elle inclut les étapes de chargement des données, de sélection
+    des paramètres, et de génération des visualisations et des fichiers d'export.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+        
     st.title("Statistiques")
 
     check_dependencies("Statistiques")

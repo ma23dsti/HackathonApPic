@@ -15,6 +15,19 @@ preprocessing_dir = "streamlit_app/static/donnees/donnees_preprocessees/"
 dossier_donnees_pour_entrainement = preprocessing_dir + "donnees_a_la_volee/"
 
 def show():
+    """
+    Affiche l'interface de prédiction.
+
+    Cette fonction permet aux utilisateurs de faire des prédictions de trafic réseau en utilisant un modèle pré-entraîné.
+    Elle inclut les étapes de validation des données d'entrée, de génération des prédictions, et d'affichage des résultats
+    sous forme de tableau et de graphiques. Elle fournit également des options pour télécharger les prédictions en CSV.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
     st.title("Prédictions")
     check_dependencies("Prédictions") 
 

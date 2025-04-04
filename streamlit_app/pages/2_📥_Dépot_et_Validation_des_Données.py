@@ -9,6 +9,21 @@ display_menu()
 preprocessing_dir = "streamlit_app/static/donnees/donnees_preprocessees/"
 
 def show():
+    """
+    Page qui s'affiche quand l'utilisateur choisit de prédire avec un modele baseline.
+    Affiche l'interface de dépôt et validation des données.
+
+    Cette fonction permet aux utilisateurs de déposer des fichiers de données pour la prédiction,
+    de valider leur format et de les afficher. Elle inclut également des messages de validation pour guider
+    l'utilisateur à travers les étapes de dépôt et de validation.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+
     st.title("Dépot et Validation des Données")
 
     ###if 'prediction_data'  in st.session_state:

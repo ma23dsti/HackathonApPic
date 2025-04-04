@@ -9,11 +9,23 @@ from dependency_manager import check_dependencies
 
 # Importer les fonctions utiles
 from utilitaires.Entrainement import entrainer_le_modèle
-
 # Afficher le menu
 display_menu()
 
 def show():
+    """
+    Affiche l'interface d'entraînement du modèle.
+
+    Cette fonction permet aux utilisateurs de lancer l'entraînement d'un modèle, de valider les données d'entrée,
+    et de visualiser les métriques de performance du modèle entraîné. Elle inclut également des messages de validation
+    pour guider l'utilisateur à travers les étapes d'entraînement et de validation.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
     st.title("Entraînement du Modèle")
 
     check_dependencies("Entraînement du Modèle")
