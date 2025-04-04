@@ -41,6 +41,19 @@ page_names = {
 }
 
 def check_dependencies(page_name):
+    """
+    Vérifie les dépendances avant d'afficher la page en cours.
+    
+
+    Cette fonction permet de vérifier si les conditions de la page précédente sont remplies avant d'afficher la page en cours.
+    Si une dépendance n'est pas remplie, un message d'erreur est affiché et l'exécution est arrêtée.
+
+    Parameters:
+    page_name (str): Nom de la page actuelle pour laquelle vérifier les dépendances.
+
+    Returns:
+    None
+    """
     # Obtenir les dépendances en fonction de choix_modele
     dependencies = dependencies_by_choice.get(st.session_state.choix_modele, {}).get(page_name, [])
     for dependency in dependencies:
