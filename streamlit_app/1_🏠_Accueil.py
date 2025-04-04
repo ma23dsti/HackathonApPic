@@ -17,6 +17,8 @@ def show():
         st.session_state['taille_fenetre_observee'] = None
     if 'horizon_predictions' not in st.session_state:
         st.session_state['horizon_predictions'] = None
+    if 'premiere_prediction_seule' not in st.session_state:
+        st.session_state['premiere_prediction_seule'] = None
 
     # Question pour l'utilisateur
     choix_modele_options = {
@@ -127,6 +129,7 @@ def show():
             st.session_state['unite_mesure'] = unite_mesure
             st.session_state['sliding_window_train'] = st.session_state.taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][st.session_state.horizon_predictions]["taille_pas_glissant_train"]
             st.session_state['sliding_window_valid'] = st.session_state.taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][st.session_state.horizon_predictions]["taille_pas_glissant_valid"]
+            st.session_state['premiere_prediction_seule'] = True
             st.session_state.valid_acceuil = True
             st.rerun()
         
