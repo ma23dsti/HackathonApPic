@@ -126,4 +126,3 @@ def check_data(test_data: pd.DataFrame, train_data: pd.DataFrame, horizon: int, 
     print(f"Fichiers sauvegardés: {name_file_x_test} \n {name_file_x_test} ")
 
     return True
-
