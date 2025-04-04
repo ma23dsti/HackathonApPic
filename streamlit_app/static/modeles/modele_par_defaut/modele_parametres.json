@@ -1,1 +1,10 @@
-{"input_size": 300, "hidden_size": 10, "output_size": 30, "kpi": {"mae": 37914.29044, "nrmse": 0.13990828973612082, "rmse": 53292.326735096045}}
+{
+    "input_size": 60,
+    "hidden_size": 10,
+    "output_size": 5,
+    "kpi": {
+        "mae": 36511.18827,
+        "nrmse": 0.13259,
+        "rmse": 50506.40522
+    }
+}
