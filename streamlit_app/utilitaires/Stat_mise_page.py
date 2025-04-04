@@ -42,4 +42,25 @@ def mise_forme_checkbox_radio():
     unsafe_allow_html=True
     )
 
+# Fonction pour réduire espace entre les titres stMarkdown et texte explicatif
+def reduction_espace_titre_texte():
+    st.markdown(
+        """
+    
+        <style>
+        /* Réduction de l'espace sous le titre principal */
+        div[data-testid="stMarkdown"] h4 {
+            margin-bottom: -15px !important;  /* Réduit  l’espace sous le titre */
+        }
 
+        /* Réduction de l'espace au-dessus du texte explicatif */
+        p[style*="font-size: 14px; font-style: italic;"] {
+            margin-top: -10px !important;  /* Remonte le texte explicatif */
+            margin-bottom: -15px !important;  /* Supprime l’espace sous le texte explicatif */
+            padding-bottom: 0px !important;
+        }
+        </style>
+        """
+        ,
+        unsafe_allow_html=True
+        )

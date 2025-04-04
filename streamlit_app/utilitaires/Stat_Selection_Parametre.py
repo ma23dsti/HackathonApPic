@@ -13,13 +13,13 @@ def create_checkbox_group(options):
     return {key: st.checkbox(label, key=key) for key, label in options.items()}
 
 # Fonction pour afficher les propositions de sélection des parametres utilisés pour l'affichage du graphe et tableau
-def selection_parametre(liste_unite,nb_modele,min_date,max_date, selection_date):
+def selection_parametre(liste_unite,nb_modele,min_date,max_date): #attention suppression selection_date
     """ Gére l'affichage par checkbox, bouton radio des differentes options necessaires 
     pour la sélection des parametres utiles pour le graphe et tableau,
     """
 
     #Decoupage de la page en colonnes pour mettre les propositions
-    col1, col2, col3, col4 = st.columns([2,1,1,1])  
+    col1, col2, col3, col4 = st.columns([2,1,1,1])  # col1 : 2/5...
     
     with col1:
         st.markdown("📊Les données:")
@@ -47,22 +47,22 @@ def selection_parametre(liste_unite,nb_modele,min_date,max_date, selection_date)
     return checkboxes["affichage_modele_entree"], choix_temps, checkboxes["affichage_ensemble_prediction"], affichage_moyenne_prediction, choix_unite
 
 def selection_plage_date(min_date, max_date):
-    # Slider pour sélectionner la plage temporelle
+    """ Genere un slider pour sélectionner la plage temporelle min et max"""
     debut_date, fin_date = st.slider(
         "",
         min_value=min_date,
         max_value=max_date,
-        #value=st.session_state["selection_date"],  # pas necessaire, doublon avec key
-        step=timedelta(seconds=1),
+        step=timedelta(seconds=1), # figée à 1 car c'est la périodicité que nous avons pris - pour la rendre dynamique cf fichier resultats.json periodicite_mesure
         format="YYYY-MM-DD HH:mm:ss",
         key="selection_date"  # synchronisation automatique
     )
+   
 
     return debut_date, fin_date
 
 
 
-def selection_variable_filtre(id_modele_entree, selection_options, selection_date, df_entrees_prevision, donnees_kpi, liste_modeles_id, var_id, id_modele_moyen,):
+def selection_variable_filtre(id_modele_entree, selection_options, selection_date, df_final, donnees_kpi, liste_modeles_id, var_id, id_modele_moyen,choix_unite):
     """
     Sélectionne les variables et données filtrées en fonction des paramétres choisis par l'utilisateur.
     Retourne les DataFrames filtrés pour le graphique et le tableau.
@@ -77,15 +77,14 @@ def selection_variable_filtre(id_modele_entree, selection_options, selection_dat
     liste_modele = modele_moyen + liste_modele_ensemble
     liste_donnees_filtre = liste_modele_entree + liste_modele
 
-    # Selection plage temps
 
     # Filtrage des données
-    df_entrees_prevision_selection = df_entrees_prevision[(df_entrees_prevision[var_id].isin(liste_donnees_filtre)) &
-                                                          (df_entrees_prevision['temps horaire'] >= pd.Timestamp(selection_date[0])) &
-                                                          (df_entrees_prevision['temps horaire'] <= pd.Timestamp(selection_date[1]))]
+    df_final_selection = df_final[(df_final[var_id].isin(liste_donnees_filtre)) & (df_final['unite mesure']==choix_unite) &
+                                                          (df_final['temps horaire'] >= pd.Timestamp(selection_date[0])) &
+                                                          (df_final['temps horaire'] <= pd.Timestamp(selection_date[1]))]
    
-    # verification si liste modele change apres le filtrage
-    liste_modele_filtre_selection = df_entrees_prevision_selection['id donnee'].unique().tolist()
+    # verifie si la liste des modeles est impactée par la sélection temporelle et message d'alerte selon le cas.
+    liste_modele_filtre_selection = df_final_selection['id donnee'].unique().tolist()
     if set(liste_modele_filtre_selection) !=set(liste_donnees_filtre):
         if set(liste_modele_filtre_selection)==set(liste_modele):
             st.toast("Les données d'entrée ont été exclues par votre sélection temporelle.", icon="⚠️")
@@ -106,9 +105,9 @@ def selection_variable_filtre(id_modele_entree, selection_options, selection_dat
         df_kpi_selection = pd.DataFrame(columns=df_kpi.columns)
 
 
-    return df_entrees_prevision_selection, df_kpi_selection, liste_donnees_filtre
+    return df_final_selection, df_kpi_selection, liste_donnees_filtre
 
-def selection_titre(selection_options, choix_temps, mesure_format, choix_unite):
+def selection_titre(selection_options, choix_temps, liste_unite, choix_unite):
     """
     Génère le titre du graphique et les labels des axes en fonction des options sélectionnées.
     """
@@ -124,13 +123,16 @@ def selection_titre(selection_options, choix_temps, mesure_format, choix_unite):
 
     titre_graphe = "Graphique des " + ", ".join(titre_parts)
 
+    """
     # format déduit de l'unité choisi
     index_unite= mesure_format['unite mesure'].index(choix_unite)
     choix_format = "" if not mesure_format["format mesure"] else mesure_format["format mesure"][index_unite]
+    """
 
     # Labels des axes
     label_x = choix_temps
-    label_y = f"{choix_format} {choix_unite}"
+    #label_y = f"{choix_format} {choix_unite}"
+    label_y = f" {choix_unite}" # plotly affiche les axes en KMGT
 
     return titre_graphe, label_x, label_y
 
@@ -139,14 +141,14 @@ def selection_donnees_format_export():
     Génère les options de sélection pour l'exportation des données et des formats.
     """
 
-    col1, col2, col3 = st.columns([1,1,2])  
+    col1, col2, col3 = st.columns([1,1,2])  # col1:1/4 ...
 
     with col1:
         st.write("📊 Les données :")
 
         # Checkbox pour les données à exporter
         donnees_options = create_checkbox_group({
-            "export_prevision": "Données des prévisions",
+            "export_prediction": "Données des prédictions",
             "export_kpi": "Métriques"
         })
 
