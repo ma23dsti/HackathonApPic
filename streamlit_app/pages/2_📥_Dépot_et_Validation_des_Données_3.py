@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from menu import display_menu
 from dependency_manager import check_dependencies
+from utilitaires.mise_page import afficher_bandeau_titre
 
 # Afficher le menu
 display_menu()

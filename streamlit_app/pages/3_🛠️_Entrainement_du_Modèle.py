@@ -10,7 +10,6 @@ from dependency_manager import check_dependencies
 
 # Importer les fonctions utiles
 from utilitaires.Entrainement import entrainer_le_modèle
-
 # Afficher le menu
 display_menu()
 
@@ -19,6 +18,19 @@ horizon = st.session_state.horizon_predictions
 taille_fenetre_observee = st.session_state.taille_fenetre_observee
 
 def show():
+    """
+    Affiche l'interface d'entraînement du modèle.
+
+    Cette fonction permet aux utilisateurs de lancer l'entraînement d'un modèle, de valider les données d'entrée,
+    et de visualiser les métriques de performance du modèle entraîné. Elle inclut également des messages de validation
+    pour guider l'utilisateur à travers les étapes d'entraînement et de validation.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
     st.title("Entraînement du Modèle")
 
     check_dependencies("Entraînement du Modèle")
@@ -95,7 +107,7 @@ def show():
                     print(f"Fichier introuvable : {chemin_source}")
 
             ##progress_bar.empty()  # Supprimer la progress bar après la fin de l'entraînement
-            st.success("Entraînement terminé.")
+            st.success("✅ Entraînement terminé.")
 
             # Après un (ré)entrainement de modèle, l'historique des resultats aura besoin d'être recalculé lors de la prochaine prédiction.
             if 'prediction_historique_recalculee' in st.session_state:

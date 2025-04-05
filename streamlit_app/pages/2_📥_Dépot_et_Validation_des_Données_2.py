@@ -6,6 +6,7 @@ import shutil
 from menu import display_menu
 from dependency_manager import check_dependencies
 from utilitaires.preprocessing.Preprocessing_train import preprocesser_les_donnees
+from utilitaires.mise_page import afficher_bandeau_titre
 
 # Afficher le menu
 display_menu()
@@ -23,7 +24,20 @@ sliding_window_train = st.session_state.sliding_window_train
 sliding_window_valid = st.session_state.sliding_window_valid
 
 def show():
-    
+    """
+    Page qui s'affiche lorsque l'utilisateur choisit une prédiction avec création d'un modèle.
+    Affiche l'interface de dépôt, validation et prétraitement des données.
+
+    Cette fonction permet aux utilisateurs de déposer des fichiers de données, de valider leur format et de les prétraiter pour l'entraînement et la prédiction.
+    Elle inclut également des boutons pour nettoyer les dossiers de validation et de résultats.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+    afficher_bandeau_titre()
     st.title("Dépot, Validation et Prétraitement des Données")
 
     check_dependencies("Dépot et Validation des Données")
@@ -92,7 +106,7 @@ def show():
         prediction_data = pd.read_csv(preprocessing_dir + "donnees_par_defaut/x_valid_s" + str(sliding_window_valid) + "_o" + str(taille_fenetre_observee) + "_p" + str(st.session_state.horizon_predictions) + "-1.csv", header=None)
         st.write(f"Format des données d'entrée par défaut pour la prédiction - Nombre de lignes: {prediction_data.shape[0]:,}, Nombre de colonnes: {prediction_data.shape[1]}")
         st.write("Apperçu des données d'entrée par défaut pour la prédiction:", prediction_data)
-
+    """
     # Bouton pour valider les données
     if st.button("Valider"):
         if input_data is not None and prediction_data is not None:
@@ -122,7 +136,7 @@ def show():
                     st.session_state.nouveau_depot_donnees = True
                 st.session_state.precedentes_donnees_deposees = dernieres_donnees_deposees              
                 st.session_state.valid_depot_donnees = True
-                st.success("Les données sont valides.")
+                st.success("✅ Les données sont valides.")
 
         else:
             st.error("Erreur: Aucun fichier n'a été téléchargé.")

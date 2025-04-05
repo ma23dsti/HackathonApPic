@@ -10,6 +10,8 @@ from menu import display_menu
 from dependency_manager import check_dependencies
 from utilitaires.Prediction import predire_le_traffic
 from utilitaires.Resultat import mettre_a_jour_model_info
+from utilitaires.mise_page import afficher_bandeau_titre
+from streamlit_extras.add_vertical_space import add_vertical_space
 
 display_menu()
 
@@ -17,7 +19,22 @@ preprocessing_dir = "streamlit_app/static/donnees/donnees_preprocessees/"
 dossier_donnees_pour_entrainement = preprocessing_dir + "donnees_a_la_volee/"
 
 def show():
+    """
+    Affiche l'interface de prédiction.
+
+    Cette fonction permet aux utilisateurs de faire des prédictions de trafic réseau en utilisant un modèle pré-entraîné.
+    Elle inclut les étapes de validation des données d'entrée, de génération des prédictions, et d'affichage des résultats
+    sous forme de tableau et de graphiques. Elle fournit également des options pour télécharger les prédictions en CSV.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+    afficher_bandeau_titre()
     st.title("Prédictions")
+    add_vertical_space(2)
     check_dependencies("Prédictions") 
 
     # Define dossier_modele_courant at the start of the function

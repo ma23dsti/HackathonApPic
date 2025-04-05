@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from menu import display_menu
 from dependency_manager import check_dependencies
+from utilitaires.mise_page import afficher_bandeau_titre
 
 display_menu()
 
@@ -17,6 +18,23 @@ taille_fenetre_observee = st.session_state.taille_fenetre_observee
 sliding_window_valid = st.session_state.sliding_window_valid
 
 def show():
+    """
+    Page qui s'affiche quand l'utilisateur choisit de prédire avec un modele baseline.
+    Affiche l'interface de dépôt et validation des données.
+
+    Cette fonction permet aux utilisateurs de déposer des fichiers de données pour la prédiction,
+    de valider leur format et de les afficher. Elle inclut également des messages de validation pour guider
+    l'utilisateur à travers les étapes de dépôt et de validation.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+
+    afficher_bandeau_titre()
+
     st.title("Dépot et Validation des Données")
 
     check_dependencies("Dépot et Validation des Données")
@@ -107,7 +125,7 @@ def show():
 
                     st.session_state['premiere_prediction_seule'] = False
 
-                st.success("Les données sont valides.")
+                st.success("✅ Les données sont valides.")
         else:
             st.error("Erreur: Aucun fichier n'a été téléchargé.")
 

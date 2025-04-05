@@ -5,14 +5,40 @@ import shutil
 # Fonction de dialogue pour la confirmation
 @st.dialog("Confirmer le retour à l'accueil")
 def confirm_reset():
+    """
+    Affiche un dialogue de confirmation pour retourner à l'accueil.
+
+    Cette fonction affiche une boîte de dialogue demandant à l'utilisateur de confirmer s'il souhaite retourner à l'accueil.
+    Si l'utilisateur confirme, toutes les données de la session en cours sont effacées et l'utilisateur est redirigé vers la page d'accueil.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+
     st.write('''Êtes-vous sûr de vouloir retourner à l'accueil ? Toutes les données non sauvegardées seront perdues.
             \n Les fichiers déposés seront également supprimés localement.
             \n Pour reprendre là où vous en étiez, fermez ce pop-up.''')
     if st.button("Retourner à l'accueil"):
         st.session_state.clear()
+        clean_results_folder("streamlit_app/resultats/donnees_a_la_volee/")
         st.switch_page("1_🏠_Accueil.py")
 
 def clean_results_folder(folder_path):
+    """
+    Nettoie le dossier de résultats spécifié en supprimant tous les fichiers et dossiers qu'il contient.
+
+    Cette fonction vérifie si le dossier de résultats existe, puis supprime tous les fichiers et sous-dossiers qu'il contient.
+
+    Parameters:
+    folder_path (str): Chemin du dossier à nettoyer.
+
+    Returns:
+    None
+    """
+
     # Vérifier si le dossier existe
     if os.path.exists(folder_path) and os.path.isdir(folder_path):
         # Loop through all files in the directory and remove them
@@ -30,6 +56,19 @@ def clean_results_folder(folder_path):
         print(f"Le dossier '{folder_path}' n'existe pas.")
 
 def display_menu():
+    """
+    Affiche le menu de navigation latéral en fonction de l'état de la session.
+
+    Cette fonction ajoute des liens vers différentes pages de l'application en fonction de l'état de la session stocké dans `st.session_state`.
+    Elle permet également de nettoyer le dossier de résultats et de retourner à l'accueil avec confirmation.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+    
     # Vérifier si 'choix_modele' est initialisé dans st.session_state
     if 'choix_modele' not in st.session_state:
         st.session_state['choix_modele'] = None
@@ -37,7 +76,7 @@ def display_menu():
     # Ajouter un bouton personnalisé pour retour à l'accueil avec confirmation
     if st.sidebar.button("🏠 Accueil", key="home_button"):
         confirm_reset()
-        clean_results_folder("streamlit_app/resultats/donnees_a_la_volee/")
+       # clean_results_folder("streamlit_app/resultats/donnees_a_la_volee/")
 
 
     # Afficher le menu en fonction de l'état de 'choix_modele'

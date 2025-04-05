@@ -1,9 +1,24 @@
 import streamlit as st
 from menu import display_menu
+from utilitaires.mise_page import afficher_bandeau_titre
 
 st.set_page_config(page_title="Plateforme de Prédiction de Trafic Réseau", page_icon="🚦", layout="wide")
 
 def show():
+    """
+    Affiche la page d'accueil de la plateforme de prédiction de trafic réseau.
+
+    Cette fonction initialise les états de session nécessaires, affiche les options pour l'utilisateur,
+    et met à jour les états de session en fonction des choix de l'utilisateur. Elle fournit également
+    des messages de validation pour guider l'utilisateur à travers les étapes de configuration.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+    afficher_bandeau_titre()
     st.title("Plateforme de Prédiction de Trafic Réseau")
     st.header("""
     Bienvenue sur la plateforme de prédiction de trafic réseau !
@@ -141,7 +156,7 @@ def show():
         
     # Message de validation pour l'utilisateur afin de passer à l'étape suivante
     if st.session_state.valid_acceuil:
-        st.success("Choix validé avec succès ! Vous pouvez passer à l'étape suivante.")
+        st.success("✅ Choix validé avec succès ! Vous pouvez passer à l'étape suivante.")
 
     st.markdown("""---""")
 

@@ -5,90 +5,96 @@ from datetime import timedelta
 from menu import display_menu
 
 from dependency_manager import check_dependencies
-from utilitaires.Chargement import chargement_donnees
-from utilitaires.Visualisation_Stat import palette_defaut, creation_graphique, creation_tableau
-from utilitaires.Selection_Parametre import selection_parametre, selection_plage_date, selection_titre, selection_variable_filtre, selection_donnees_format_export
-from utilitaires.Export_Resultat import export_data_zip
+from utilitaires.stat_chargement import charger_fichier_json, extraire_donnees_entree, extraire_donnees_prediction_et_kpi, fusionner_et_convertir, obtenir_info_metadata
+from utilitaires.stat_visualisation import  creation_graphique, creation_tableau, palette_daltonien
+from utilitaires.stat_selection_parametre import selection_parametre, selection_plage_date, selection_titre, selection_min_max_choix_temps, selection_variable_filtre, selection_donnees_format_export
+from utilitaires.stat_export_resultat import gerer_export
 from streamlit_extras.add_vertical_space import add_vertical_space
-from utilitaires.mise_page import mise_forme_checkbox_radio
+from utilitaires.mise_page import mise_forme_checkbox_radio, reduction_espace_titre_texte, afficher_bandeau_titre, style_SliderThumbValue
 import plotly.express as px
 import tempfile
+import pandas as pd
 
 
 display_menu()
 
 def show():
+    afficher_bandeau_titre()
     st.title("Statistiques")
 
     check_dependencies("Statistiques")
 
-    # en attendant d'avoir les vraies valeurs chargement de données pour faire des essais - Charger les données au démarrage
-    df_entrees_prevision, donnees_kpi, col_temps, liste_modeles_id,nb_modele,id_modele_moyen,id_modele_entree,liste_unite,mesure_format, var_id, var_val,min_date,max_date,min_date_entree, max_date_entree, min_date_prevision, max_date_prevision=chargement_donnees()
+    # Chargement du fichier json resultats
+    data=charger_fichier_json()
+    # Extrait les données d'entrée (données observées) 
+    df_donnees_entrees, entree, liste_unite, id_modele_entree=extraire_donnees_entree(data)
+    # Extrait les données de prédiction et les données de KPI
+    df_prediction, donnees_kpi, prediction=extraire_donnees_prediction_et_kpi(data, entree)
+    # Fusione les données d'entréé et de prédiction pour créer un unique df
+    df_final=fusionner_et_convertir(df_donnees_entrees, df_prediction)
+    # Créé des listes et données nécessaires dans les filtres, affichage des boutons...
+
+    (col_temps,liste_modeles_id,nb_modele,id_modele_moyen,
+     unite_mesure_defaut,var_id,var_val)=obtenir_info_metadata(df_final, df_donnees_entrees, df_prediction, prediction,entree)
     
-    
-    st.markdown(
-    """
-   
-    <style>
-    /* Réduction de l'espace sous le titre principal */
-    div[data-testid="stMarkdown"] h4 {
-        margin-bottom: -15px !important;  /* Réduit encore plus l’espace sous le titre */
-    }
-
-    /* Réduction de l'espace au-dessus du texte explicatif */
-    p[style*="font-size: 14px; font-style: italic;"] {
-        margin-top: -10px !important;  /* Remonte encore plus le texte explicatif */
-        margin-bottom: -15px !important;  /* Supprime l’espace sous le texte explicatif */
-        padding-bottom: 0px !important;
-    }
-    </style>
-    """
-    ,
-    unsafe_allow_html=True
-    )
+    # pour réduire espace entre les titres stMarkdown et les textes explicatifs
+    reduction_espace_titre_texte()
    
 
-
-   
     st.markdown("#### 🔧 Sélection des Paramètres à afficher") 
-    st.markdown("<p style='font-size:14px; font-style:italic;'>Le graphique et le tableau des métriques se mettront à jour dynamiquement en fonction de vos sélections.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:16px; font-style:italic;'>Le graphique et le tableau des métriques se mettront à jour dynamiquement en fonction de vos sélections.</p>", unsafe_allow_html=True)
     
-    # Initialisation des paramétres
+    # Initialisation des paramétres session_state
     st.session_state.setdefault("affichage_modele_entree", True)
     st.session_state.setdefault("choix_temps", "Temps horaire")
     st.session_state.setdefault("affichage_ensemble_prediction", True)
     st.session_state.setdefault("affichage_moyenne_prediction", False)
-    st.session_state.setdefault("selection_date", (min_date, max_date))
-    st.session_state.setdefault("choix_unite", liste_unite[0])
-    #st.session_state.setdefault("export_donnees",True)
+    st.session_state.setdefault("choix_unite", unite_mesure_defaut)
 
-    selection_date = st.session_state["selection_date"]
     
     mise_forme_checkbox_radio()
 
     # Selection des parametres et variables
-    affichage_modele_entree, choix_temps, affichage_ensemble_prediction, affichage_moyenne_prediction, choix_unite= selection_parametre(liste_unite,nb_modele,min_date,max_date, selection_date)
+    affichage_modele_entree, choix_temps, affichage_ensemble_prediction, affichage_moyenne_prediction, choix_unite= selection_parametre(liste_unite,nb_modele)
     
     #création d'une liste pour simplifier la gestion de la selection des affichages
     selection_options = {"affichage_modele_entree": st.session_state.affichage_modele_entree,
                          "affichage_ensemble_prediction": st.session_state.affichage_ensemble_prediction,
                          "affichage_moyenne_prediction": st.session_state.affichage_moyenne_prediction}
     
-    #st.session_state["selection_date"] = {"debut": debut_date, "fin": fin_date}
 
+    min_date, max_date, min_date_entree, max_date_entree ,min_date_prediction ,max_date_prediction=selection_min_max_choix_temps(choix_temps, df_final,df_donnees_entrees,df_prediction)
+     
+
+    if choix_temps == "temps horaire":
+        valeur_defaut = (df_final["temps horaire"].min().to_pydatetime(), df_final["temps horaire"].max().to_pydatetime())
+    else:
+        valeur_defaut = (int(df_final["temps relatif"].min()), int(df_final["temps relatif"].max()))
+
+    # Forcer la mise à jour du session_state si le type change
+    if "selection_date" in st.session_state:
+        ancien_type = type(st.session_state["selection_date"][0])
+        nouveau_type = type(valeur_defaut[0])
+        if ancien_type != nouveau_type:
+            st.session_state["selection_date"] = valeur_defaut
+    else:
+        st.session_state["selection_date"] = valeur_defaut
     
-   
+    selection_date = st.session_state["selection_date"]
+    
+    add_vertical_space(1)
+
     #Filtre sur l'axe des temps
-    st.markdown("📅 Fenêtre temporelle:")
+    st.markdown("Fenêtre temporelle 📅 :")
 
-
+    # Mise en forme et message rappelant les bornes temporelles 
     st.markdown(
     f"""
-    <div style="background-color:#f5f5f5; padding:10px; border-radius:5px;">
+    <div style="background-color:#f5f5f5; padding:10px; border-radius:5px;border: 2px solid orange;">
         <em style="color:#333333; font-size:14px;">
         ⚠️ Attention :<br>
-        Les données d’entrée sont disponibles entre <strong>{min_date_entree} et {max_date_entree}</strong>,
-        et les prévisions entre <strong>{min_date_prevision} et {max_date_prevision}</strong>.<br>
+        En <strong>{choix_temps}</strong>, les données d’entrée sont disponibles entre <strong>{min_date_entree} et {max_date_entree}</strong>,
+        et les prévisions entre <strong>{min_date_prediction} et {max_date_prediction}</strong>.<br>
         Si vous sélectionnez une période excluant certains intervalles,les données concernées ne seront pas affichées même si elles sont sélectionnées.
         </em>
     </div>
@@ -96,36 +102,23 @@ def show():
     unsafe_allow_html=True
     )
 
-    couleur_slider = "#00FF00" 
-        #if not mode_daltonien else "#FFD700"
+    style_SliderThumbValue()
 
-    st.markdown(
-        f"""
-        <style>
-        .stSlider [data-baseweb="slider"] > div > div span {{color: {couleur_slider} !important;}}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-    #debut_session = st.session_state["selection_date"]["debut"]
-    #fin_session = st.session_state["selection_date"]["fin"]
-
-    debut_date, fin_date = selection_plage_date(min_date, max_date)
-
-
-
-    if (debut_date != st.session_state["selection_date"][0]) or (fin_date != st.session_state["selection_date"][1]):
-        st.session_state["selection_date"] = (debut_date, fin_date)
-
-     
+   
+    #Slider pour sélectionner les plages horaires des données
+    debut_date, fin_date = selection_plage_date(min_date, max_date, choix_temps)
     
-    # Données filtres suite à la sélection des parametres
-    df_entrees_prevision_selection, df_kpi_selection, liste_donnees_filtre=selection_variable_filtre(id_modele_entree, selection_options, selection_date, df_entrees_prevision, donnees_kpi, liste_modeles_id, var_id, id_modele_moyen)
-
-
-    # titre_graphe, label_x, label_y, df_kpi_selection, df_entrees_prevision_selection, liste_donnees_filtre=selection_variable(id_historique, choix_temps, affichage_historique, affichage_moyenne_prediction, affichage_ensemble_prediction, df_entrees_prevision, donnees_kpi, liste_modeles_id,mesure_format,choix_unite, var_id,id_modele_moyen)
-    titre_graphe, label_x, label_y=selection_titre(selection_options, choix_temps, mesure_format, choix_unite)
     
+    # Données et df filtrés suite à la sélection des parametres
+    df_final_selection, df_kpi_selection, liste_donnees_filtre=selection_variable_filtre(id_modele_entree, 
+                    selection_options, selection_date, df_final, donnees_kpi, liste_modeles_id, 
+                    var_id, id_modele_moyen, choix_unite, choix_temps)
+
+
+    # Création titre et label des axes suite à la sélection des parametres
+    titre_graphe, label_x, label_y=selection_titre(selection_options, choix_temps, liste_unite, choix_unite)
+    
+
     add_vertical_space(2) # ajout espace
     st.markdown("#### 📈 Affichage des Résultats")
 
@@ -135,23 +128,24 @@ def show():
 
         st.markdown("#####  Rappel des Métriques")
         tab=creation_tableau (df_kpi_selection)
-        st.plotly_chart(tab, use_container_width=True)
-        #st.plotly_chart(tab)
+        #st.plotly_chart(tab, use_container_width=True)
+        st.plotly_chart(tab)
         #st.markdown("<div style='margin-top: -50px;'></div>", unsafe_allow_html=True)
 
         
     with col2:
-        st.markdown(f" ##### {titre_graphe}")
-        fig=creation_graphique(df_entrees_prevision_selection, palette_defaut, liste_donnees_filtre, var_id,choix_temps,var_val, label_x,label_y)
-        st.pyplot(fig)
-        st.markdown("<div style='margin-top: -50px;'></div>", unsafe_allow_html=True)
+        st.markdown(f" ##### Graphique de prédiction des différents modèles obtenus")
+        fig=creation_graphique(df_final_selection, palette_daltonien, liste_donnees_filtre, var_id,choix_temps,var_val, label_x,label_y)
+        st.plotly_chart(fig)
+        #st.pyplot(fig)
+        #st.markdown("<div style='margin-top: -50px;'></div>", unsafe_allow_html=True)
         
 
-    #add_vertical_space(2)
+    add_vertical_space(2)
 
-    #Export des données selectionnées
-    st.markdown("#### Sélection des paramètres d'export")
-    st.markdown("<p style='font-size:14px; font-style:italic;'>Sélectionner les données et format à exporter puis cliquer sur le bouton pour les exporter en fichier zip.</p>", unsafe_allow_html=True)
+    # Export des données selectionnées
+    st.markdown("#### 📦 Sélection des paramètres d'export")
+    st.markdown("<p style='font-size:16px; font-style:italic;'>Sélectionner les données et format à exporter puis cliquer sur le bouton pour les exporter en fichier zip.</p>", unsafe_allow_html=True)
     st.markdown(" ")
     
 
@@ -165,17 +159,13 @@ def show():
     if "zip_path" not in st.session_state:
         st.session_state.zip_path = None  # Chemin du fichier ZIP temporaire
 
-    # Bouton pour générer le fichier ZIP
-    if st.button("📝 Générer le fichier ZIP"):
-        st.session_state.zip_ready = False  # Réinitialisation
-        with st.spinner("⏳ Préparation du fichier ZIP en cours... Veuillez patienter."):
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".zip") as tmp_zip:
-                zip_file_path = tmp_zip.name  # Chemin du fichier temporaire qui est généré
-                # récupération du fichier via la fonction (on stocke en memoire le chemin pas le fichier)
-                st.session_state.zip_path =export_data_zip(df_entrees_prevision_selection, df_kpi_selection, export_options, fig, tab, titre_graphe, zip_file_path)
-                
-                st.session_state.zip_ready = True  # Indique que le fichier est prêt
-            
+    # controle pour vérifier si au moins un type de données et un format sont sélectionnés (cochés)
+    export_possible = (any(export_options["donnees"].values()) and any(export_options["formats"].values()))
+
+    # Bouton pour générer le fichier ZIP - grisé si export_possible ==False
+    if st.button("📝 Générer le fichier ZIP", disabled= not export_possible): 
+        gerer_export(df_final_selection, df_kpi_selection, export_options, fig, tab, titre_graphe)
+
                 
     # Affichage du bouton de téléchargement quand le fichier est prêt
     if st.session_state.zip_ready and st.session_state.zip_path:
@@ -192,10 +182,7 @@ def show():
     if any(st.session_state[key] for key in {**export_options["formats"], **export_options["donnees"]}):
         st.session_state.zip_ready = False  # Force la régénération
         st.session_state.zip_path = None  # Supprime le chemin du fichier
-
-    
-
-
+  
 
     st.session_state.valid_statistiques = True
 
