@@ -21,4 +21,8 @@ notes.txt
 
 # Ignorer les fichiers générés à l'exécution
 donnees_a_la_volee/
+modele_courant/
 modeles_entraines/
+
+# Ignorer les autres fichiers non voues à être versionnés
+*.png

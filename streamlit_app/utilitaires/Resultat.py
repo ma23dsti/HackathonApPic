@@ -4,6 +4,8 @@ import os
 import random
 import streamlit as st
 
+dossier_modele_courant = "streamlit_app/static/modeles/modele_courant/"
+
 def mettre_a_jour_model_info(predictions, entrainement_modele=False):
     """Met à jour model_info avec la nouvelle prédiction et recalcule modele_moyen."""
 
@@ -21,7 +23,7 @@ def mettre_a_jour_model_info(predictions, entrainement_modele=False):
             nrmse_courant = st.session_state.nrmse_value
             mae_courant = st.session_state.mae_value
     else: 
-        with open("streamlit_app/static/modeles/modele_par_defaut/modele_parametres.json", "r") as f:
+        with open(os.path.join(dossier_modele_courant, "modele_parametres.json"), "r") as f:
             params = json.load(f)
             nrmse_courant = params["kpi"]["nrmse"]
             mae_courant = round(random.uniform(0.3, 0.5), 4)

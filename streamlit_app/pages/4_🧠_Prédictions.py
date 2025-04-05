@@ -1,4 +1,5 @@
 import json
+import os
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -13,6 +14,7 @@ display_menu()
 
 preprocessing_dir = "streamlit_app/static/donnees/donnees_preprocessees/"
 dossier_donnees_pour_entrainement = preprocessing_dir + "donnees_a_la_volee/"
+dossier_modele_courant = "streamlit_app/static/modeles/modele_courant/"
 
 def show():
     """
@@ -143,7 +145,7 @@ def show():
             if st.session_state.entrainement_modele==True:
                 nrmse_courant = st.session_state.nrmse_value
         else: 
-            with open("streamlit_app/static/modeles/modele_par_defaut/modele_parametres.json", "r") as f:
+            with open(os.path.join(dossier_modele_courant, "modele_parametres.json"), "r") as f:
                 params = json.load(f)
                 nrmse_courant = params["kpi"]["nrmse"]
         plt.plot(
