@@ -66,13 +66,15 @@ def entrainer_le_modèle(dossier_donnees):
     # Dossier du modèle par défaut
     dossier_modele_par_defaut = f"streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_restreint_o{taille_fenetre_observee}_p{horizon}/"
     # Récupérer les fichiers du modèle par défaut à utiliser pour l'entrainement
-    fichiers_modele_par_defaut = ["modele.pth", "modele_parametres.json", "x_scaler.pkl", "y_scaler.pkl"]
-    dossier_modele_parent = os.path.dirname(os.path.dirname(dossier_modele_par_defaut)) + "/"  # Récupère le dossier parent
+    fichiers_modele = ["modele.pth", "modele_parametres.json", "x_scaler.pkl", "y_scaler.pkl"]
+    dossier_modele_courant = "streamlit_app/static/modeles/modele_courant/"
+    # Créer le dossier du modèle courant s'il n'existe pas.
+    os.makedirs(dossier_modele_courant, exist_ok=True)
 
-    # Copier chaque fichier dans le dossier parent
-    for fichier in fichiers_modele_par_defaut:
+    # Copier chaque fichier dans le dossier du modèle courant
+    for fichier in fichiers_modele:
         chemin_source = os.path.join(dossier_modele_par_defaut, fichier)
-        chemin_destination = os.path.join(dossier_modele_parent, fichier)
+        chemin_destination = os.path.join(dossier_modele_courant, fichier)
 
         # Vérifier si le fichier existe dans le dossier de destination et le supprimer
         if os.path.exists(chemin_destination):
@@ -105,7 +107,7 @@ def entrainer_le_modèle(dossier_donnees):
             return self.fc2(x)
 
     # Charger le modèle préentrainé et ses hyperparamètres.
-    with open(dossier_modele_parent + "modele_parametres.json", "r") as f:
+    with open(dossier_modele_courant + "modele_parametres.json", "r") as f:
         params = json.load(f)
 
     loaded_input_size = params["input_size"]
@@ -115,7 +117,7 @@ def entrainer_le_modèle(dossier_donnees):
     # Reconstruire l'architecture du modèle à utiliser
     loaded_model = BiLSTMModel(loaded_input_size, loaded_hidden_size, loaded_output_size).to(device)
     # Charger les poids du modèle préentrainé
-    loaded_model.load_state_dict(torch.load(dossier_modele_parent + "modele.pth", map_location=device))
+    loaded_model.load_state_dict(torch.load(dossier_modele_courant + "modele.pth", map_location=device))
     # Affecter le modèle par défaut préentrainé pour utilisation
     model = loaded_model
     # model.eval()  # Set model to evaluation mode
@@ -304,11 +306,11 @@ def entrainer_le_modèle(dossier_donnees):
 
         # Mettre à jour le modèle courant avec celui finetuné
         #Enregistrer les poids
-        torch.save(model.state_dict(), dossier_modele_parent + "modele.pth")
+        torch.save(model.state_dict(), dossier_modele_courant + "modele.pth")
 
         # Save scalers
-        joblib.dump(x_scaler, dossier_modele_parent + "x_scaler.pkl")
-        joblib.dump(y_scaler, dossier_modele_parent + "y_scaler.pkl")
+        joblib.dump(x_scaler, dossier_modele_courant + "x_scaler.pkl")
+        joblib.dump(y_scaler, dossier_modele_courant + "y_scaler.pkl")
 
         # Save model parameters (input_size, hidden_size, output_size, kpi)
         params = {
@@ -321,7 +323,7 @@ def entrainer_le_modèle(dossier_donnees):
                 "rmse": rmse_KPI
             }
         }
-        with open(dossier_modele_parent + "modele_parametres.json", "w") as f:
+        with open(dossier_modele_courant + "modele_parametres.json", "w") as f:
             json.dump(params, f)
 
     else:

@@ -65,13 +65,15 @@ def show():
                 if st.session_state.premiere_prediction_seule:
                     # Dossier du modèle par défaut
                     dossier_modele_par_defaut = f"streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_restreint_o{taille_fenetre_observee}_p{horizon}/"
-                    fichiers_modele_par_defaut = ["modele.pth", "modele_parametres.json", "x_scaler.pkl", "y_scaler.pkl"]
-                    dossier_modele_parent = os.path.dirname(os.path.dirname(dossier_modele_par_defaut)) + "/"
+                    fichiers_modele = ["modele.pth", "modele_parametres.json", "x_scaler.pkl", "y_scaler.pkl"]
+                    dossier_modele_courant = "streamlit_app/static/modeles/modele_courant/"
+                    # Créer le dossier du modèle courant s'il n'existe pas.
+                    os.makedirs(dossier_modele_courant, exist_ok=True)
 
                     # Copier les fichiers du modèle par défaut
-                    for fichier in fichiers_modele_par_defaut:
+                    for fichier in fichiers_modele:
                         chemin_source = os.path.join(dossier_modele_par_defaut, fichier)
-                        chemin_destination = os.path.join(dossier_modele_parent, fichier)
+                        chemin_destination = os.path.join(dossier_modele_courant, fichier)
 
                         # Vérifier si le fichier existe dans le dossier de destination et le supprimer
                         if os.path.exists(chemin_destination):
