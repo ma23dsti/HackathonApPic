@@ -1,0 +1,1 @@
+{"input_size": 300, "hidden_size": 800, "output_size": 30, "kpi": {"mae": 40881.05762, "nrmse": 0.1509, "rmse": 57480.73061}}

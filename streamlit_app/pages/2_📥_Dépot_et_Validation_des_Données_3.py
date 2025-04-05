@@ -1,7 +1,7 @@
+import os
 import streamlit as st
 import numpy as np
 import pandas as pd
-import torch
 from menu import display_menu
 from dependency_manager import check_dependencies
 from utilitaires.mise_page import afficher_bandeau_titre
@@ -9,12 +9,25 @@ from utilitaires.mise_page import afficher_bandeau_titre
 # Afficher le menu
 display_menu()
 
-def show():
+# Dossiers de données
+path_donnees_raw = "streamlit_app/static/donnees/donnees_raw/"    # Jeu de données par défaut (jeu de données fournis lors de la phase 1 de l'hackathon)
+preprocessing_dir = "streamlit_app/static/donnees/donnees_preprocessees/"
+donnees_a_la_volee_dir = os.path.join(preprocessing_dir, "donnees_a_la_volee/")
+resultats_a_la_volee_dossier = "streamlit_app/resultats/donnees_a_la_volee/"
+
+# Récupérer les différentes tailles nécessaires pour les validations
+horizon = st.session_state.horizon_predictions
+taille_fenetre_observee = st.session_state.taille_fenetre_observee
+sliding_window_train = st.session_state.sliding_window_train
+sliding_window_valid = st.session_state.sliding_window_valid
+
+def show():    
+
     """
     Page qui s'affiche lorque l'utilisateur choisit de faire une prédiction avec un modèle à upload
     Affiche l'interface de dépôt et validation des données.
 
-    Cette fonction permet aux utilisateurs de déposer un modèle au format PTH et des fichiers de prédiction,
+    Cette fonction permet aux utilisateurs d'indiquer le dossier des fichiers d'un modèle et des fichiers de prédiction,
     de valider leur format et de les afficher. Elle inclut également des messages de validation pour guider
     l'utilisateur à travers les étapes de dépôt et de validation.
 
@@ -25,54 +38,120 @@ def show():
     None
     """
     
-    afficher_bandeau_titre()
-
     st.title("Dépot et Validation des Données")
 
     check_dependencies("Dépot et Validation des Données")
 
+    # Date de la première observation dans la série des temps observés
+    if "date_premiere_observation" not in st.session_state:
+        st.session_state.date_premiere_observation = "2025-02-10 00:01:00"  # Default value
 
-    st.write("Veuillez entrer les données pour les 60 dernières secondes:")
+    date_premiere_observation = st.text_input(
+        "Date de la première observation (format: YYYY-MM-DD HH:MM:SS)",
+        value=st.session_state.date_premiere_observation,
+        help="Entrez une date au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'."
+    )
 
-    # Espace de dépôt des données d'entraînement
-    uploaded_file = st.file_uploader("Déposez votre modèle au format PTH ici :", type=["pth"])
+    # Validate the date format and update session state
+    try:
+        pd.to_datetime(date_premiere_observation, format="%Y-%m-%d %H:%M:%S")
+        st.session_state.date_premiere_observation = date_premiere_observation
+    except ValueError:
+        st.error("Erreur: La date doit être au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'.")
+        return
+
+        # Field to select a folder (mandatory)
+    if "model_charge" not in st.session_state:
+        st.session_state.model_charge = None
+
+    st.write("Entrez le chemin du dossier contenant le modèle :")
+
+    # Text input for folder path
+    folder_path_input = st.text_input(
+        "Chemin du dossier :",
+        value=st.session_state.get('model_charge', ""),  # Use the stored value if available
+        help="Entrez le chemin complet du dossier contenant le modèle."
+    )
+
+    # Update the session state only if the input changes
+    if folder_path_input and folder_path_input != st.session_state.get('model_charge', ""):
+        if os.path.isdir(folder_path_input):
+            st.session_state['model_charge'] = folder_path_input
+        else:
+            st.error("Erreur : Le chemin du dossier spécifié n'existe pas ou n'est pas un dossier.")
+            return
+
+    # Set default model path if no folder is entered and no value is stored
+    if not st.session_state.get('model_charge'):
+        default_model_path = "streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_restreint_o60_p5/"
+        if os.path.isdir(default_model_path):
+            st.session_state['model_charge'] = default_model_path
+            st.info(f"Aucun modèle spécifié. Le modèle par défaut sera utilisé : {default_model_path}")
+        else:
+            st.error(f"Erreur : Le modèle par défaut n'existe pas au chemin spécifié : {default_model_path}")
+            return
+
+    if st.session_state.get('model_charge'):
+        st.write(f"Modèle chargé depuis : {st.session_state.model_charge}")
+
+    st.write("Veuillez entrer les données pour les ", taille_fenetre_observee, " dernières secondes:")
 
     # Espace de dépôt des données de prédiction
     uploaded_file_2 = st.file_uploader("Déposez vos fichiers de prédiction ici :", type=["csv", "txt"])
 
-    # Charger et afficher le modèle
-    if uploaded_file is not None:
-        try:
-            model = torch.load(uploaded_file)
-            st.write("Modèle chargé avec succès.")
-        except Exception as e:
-            st.error(f"Erreur lors de l'importation du modèle : {e}")
-            model = None
-    else:
-        # Modèle fictif pour les tests
-        st.write("Aucun modèle chargé.")
-        model = True
-
     # Lecture et affichage des données de prédiction
     if uploaded_file_2 is not None:
         try:
-            prediction_data = pd.read_csv(uploaded_file_2)
-            st.write("Affichage des données d'entrée pour la prédiction :", prediction_data)
+            prediction_data = pd.read_csv(uploaded_file_2, header=None)
+            # Vérification des dimensions des données observées afin de pouvoir effectuer la prédiction
+            expected_shape_2 = (1, taille_fenetre_observee)
+            if prediction_data.shape != expected_shape_2:
+                st.error(f"Erreur : le fichier doit avoir les dimension suivantes : {expected_shape_2}, mais a {prediction_data.shape}. Veuillez déposer un fichier valide.")
+                prediction_data = None  # Annulation du fichier chargé
+            else:
+                st.write("Affichage des données d'entrée pour la prédiction :", prediction_data)
         except Exception as e:
             st.error(f"Erreur lors de la lecture du fichier de prédiction : {e}")
             prediction_data = None
     else:
-        # Données fictives pour les tests
-        prediction_data = np.random.rand(1, 60)
-        st.write("Données de prédiction fictives:", prediction_data)
+        # Jeu de données de test par défaut afin de pouvoir effectuer des tests
+        prediction_data = pd.read_csv(preprocessing_dir + "donnees_par_defaut/x_valid_s" + str(sliding_window_valid) + "_o" + str(taille_fenetre_observee) + "_p" + str(st.session_state.horizon_predictions) + "-1.csv", header=None)
+        st.write(f"Format des données d'entrée par défaut pour la prédiction - Nombre de lignes: {prediction_data.shape[0]:,}, Nombre de colonnes: {prediction_data.shape[1]}")
+        st.write("Apperçu des données d'entrée par défaut pour la prédiction:", prediction_data)
 
     # Bouton pour valider les données
     if st.button("Valider"):
-        if model is not None and prediction_data is not None:
-            st.success("Les données ont été validées avec succès.")
-            st.session_state.valid_depot_donnees = True
-        else:
-            st.error("Erreur: Aucun fichier n'a été téléchargé ou les fichiers sont invalides.")
+
+            if prediction_data.isna().values.any():
+                st.error("Erreur: Les données contiennent des valeurs manquantes.")
+            elif (prediction_data < 0).values.any():
+                st.error("Erreur: Les données contiennent des valeurs négatives.")
+            else:
+                # Preprocessing et Validation des données à utiliser pour l'entrainement
+                # Create the directory if it does not exist
+                os.makedirs(donnees_a_la_volee_dir, exist_ok=True)
+
+
+
+                # Validation des données utilisées pour la prédiction
+                # Convert prediction_data to a DataFrame with a 'value' column
+                prediction_data_df = pd.DataFrame({'value': prediction_data.values.flatten()})
+                prediction_data_df.index = range(1, len(prediction_data_df) + 1)
+
+                # Store properly formatted data in session state
+                st.session_state.prediction_data = prediction_data_df
+
+                st.session_state.prediction_effectuee = False
+                dernieres_donnees_deposees = prediction_data_df
+                if ('precedentes_donnees_deposees' not in st.session_state) or ('precedentes_donnees_deposees' in st.session_state and not dernieres_donnees_deposees.equals(st.session_state.precedentes_donnees_deposees)):
+                    st.session_state.nouveau_depot_donnees = True
+                st.session_state.precedentes_donnees_deposees = dernieres_donnees_deposees              
+                st.session_state.valid_depot_donnees = True
+
+                st.session_state.prediction_avec_model_charge = True
+
+                st.success("Les données sont valides.")
+
 
 if __name__ == "__main__":
     show()
