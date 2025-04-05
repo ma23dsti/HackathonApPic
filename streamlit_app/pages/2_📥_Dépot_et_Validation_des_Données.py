@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from menu import display_menu
 from dependency_manager import check_dependencies
+from utilitaires.mise_page import afficher_bandeau_titre
 
 display_menu()
 
@@ -31,6 +32,8 @@ def show():
     Returns:
     None
     """
+
+    afficher_bandeau_titre()
 
     st.title("Dépot et Validation des Données")
 
@@ -122,7 +125,7 @@ def show():
 
                     st.session_state['premiere_prediction_seule'] = False
 
-                st.success("Les données sont valides.")
+                st.success("✅ Les données sont valides.")
         else:
             st.error("Erreur: Aucun fichier n'a été téléchargé.")
 

@@ -9,6 +9,8 @@ from menu import display_menu
 from dependency_manager import check_dependencies
 from utilitaires.Prediction import predire_le_traffic
 from utilitaires.Resultat import mettre_a_jour_model_info
+from utilitaires.mise_page import afficher_bandeau_titre
+from streamlit_extras.add_vertical_space import add_vertical_space
 
 display_menu()
 
@@ -30,7 +32,9 @@ def show():
     Returns:
     None
     """
+    afficher_bandeau_titre()
     st.title("Prédictions")
+    add_vertical_space(2)
     check_dependencies("Prédictions") 
 
     # Tailles nécessaires pour la prédiction'

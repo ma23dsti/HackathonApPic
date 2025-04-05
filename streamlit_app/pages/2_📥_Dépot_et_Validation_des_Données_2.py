@@ -6,6 +6,7 @@ import shutil
 from menu import display_menu
 from dependency_manager import check_dependencies
 from utilitaires.preprocessing.Preprocessing_train import preprocesser_les_donnees
+from utilitaires.mise_page import afficher_bandeau_titre
 
 # Afficher le menu
 display_menu()
@@ -36,7 +37,7 @@ def show():
     Returns:
     None
     """
-    
+    afficher_bandeau_titre()
     st.title("Dépot, Validation et Prétraitement des Données")
 
     check_dependencies("Dépot et Validation des Données")
@@ -134,7 +135,7 @@ def show():
         except Exception as e:
             st.error(f"Erreur lors de la lecture du fichier de prédiction : {e}")
             prediction_data = None
-    else:
+    """else:
         # Données fictives pour les tests
         prediction_data = np.random.rand(1, taille_fenetre_observee)
         st.write("Données observées fictives:", prediction_data)
@@ -143,7 +144,7 @@ def show():
         prediction_data = pd.read_csv(preprocessing_dir + "donnees_par_defaut/x_valid_s" + str(sliding_window_valid) + "_o" + str(taille_fenetre_observee) + "_p" + str(st.session_state.horizon_predictions) + "-1.csv", header=None)
         st.write(f"Format des données d'entrée par défaut pour la prédiction - Nombre de lignes: {prediction_data.shape[0]:,}, Nombre de colonnes: {prediction_data.shape[1]}")
         st.write("Apperçu des données d'entrée par défaut pour la prédiction:", prediction_data)
-
+    """
     # Bouton pour valider les données
     if st.button("Valider"):
         if input_data is not None and prediction_data is not None:
@@ -173,7 +174,7 @@ def show():
                     st.session_state.nouveau_depot_donnees = True
                 st.session_state.precedentes_donnees_deposees = dernieres_donnees_deposees              
                 st.session_state.valid_depot_donnees = True
-                st.success("Les données sont valides.")
+                st.success("✅ Les données sont valides.")
 
         else:
             st.error("Erreur: Aucun fichier n'a été téléchargé.")

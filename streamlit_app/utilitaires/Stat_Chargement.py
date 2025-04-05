@@ -10,8 +10,14 @@ import json
 
 def charger_fichier_json():
     """
-    Charge le fichier JSON resultats (fichier conteant les données d'entrée et prévision)
-    Retourne le dictionnaire Python correspondant.
+    Charge le fichier JSON contenant les données d'entrée et de prévision.
+
+    Retourne:
+        dict : Dictionnaire Python représentant le contenu du fichier JSON.
+
+    Exceptions:
+        FileNotFoundError : Si le fichier JSON est introuvable à l'emplacement spécifié.
+        ValueError : Si le contenu du fichier n'est pas un dictionnaire.
     """
 
     # Récupérer le dossier où se trouve Chargement.py
@@ -205,31 +211,7 @@ def fusionner_et_convertir(df_entree, df_prediction):
     # Fusion des données d'entrée et de prévision dans un seul DataFrame
     df_final = pd.concat([df_entree, df_prediction], ignore_index=True)
 
-    #plus besoin de la conversion, fait dans le json directement
-    """
-    # Création d'une copie pour effectuer la conversion d’unité
-    df_convertion = df_origine.copy()
-
-    # Application des conversions:
-    # unité d'origine
-    unite_initiale = df_convertion['unite mesure'].iloc[0]
-
-    if unite_initiale == "Bits/s":
-        # Si l'unité est Bits/s → conversion en en Octets/s
-        df_convertion['valeur'] = df_convertion['valeur'] / 8
-        df_convertion['unite mesure'] = "Octets/s"
-
-    elif unite_initiale == "Octets/s":
-        # Si l'unité est Octets/s → convertirconversion en Bits/s
-        df_convertion['valeur'] = df_convertion['valeur'] * 8
-        df_convertion['unite mesure'] = "Bits/s"
-
-    else:
-        raise ValueError(f"Unité inattendue : {unite_initiale}")
-
-    # Fusion des deux versions : originale + convertie
-    df_final = pd.concat([df_origine, df_convertion], ignore_index=True)
-    """
+   
     return df_final
 
 
@@ -260,21 +242,13 @@ def obtenir_info_metadata(df_final, df_donnees_entrees, df_prediction, predictio
 
     # nom des colonnes temporelles (contenant "temps")
     col_temps = [col for col in df_final.columns if 'temps' in col.lower()]
-
-    # récupération des bornes temporelles
-    min_date = df_final['temps horaire'].min().to_pydatetime() # date min global
-    max_date = df_final['temps horaire'].max().to_pydatetime() # date max global
-    min_date_entree = df_donnees_entrees['temps horaire'].min().to_pydatetime()  # date min des entrées
-    max_date_entree = df_donnees_entrees['temps horaire'].max().to_pydatetime()  # date max des entrées
-    min_date_prediction = df_prediction['temps horaire'].min()  # date min prédictions
-    max_date_prediction = df_prediction['temps horaire'].max()  # date max prédictions
-
+    
     # nom des variables cibles pour affichage et regroupement
     var_id = 'id donnee'
     var_val = 'valeur'
 
-    return (col_temps,liste_modeles_id,nb_modele,id_modele_moyen,unite_mesure_defaut,var_id,var_val,min_date,max_date,min_date_entree,max_date_entree,
-            min_date_prediction,max_date_prediction)
+
+    return (col_temps,liste_modeles_id,nb_modele,id_modele_moyen,unite_mesure_defaut,var_id,var_val)
 
    
 

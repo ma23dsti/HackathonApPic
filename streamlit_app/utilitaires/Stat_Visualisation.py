@@ -59,10 +59,10 @@ palette_daltonien=["rgb(57,75,154)",
                    "rgb(102,37,6)"]
 
 """
-# Définition des styles de lignes et des épaisseurs (12 styles différents)
-#ligne_styles = [':','-', '--', '-.']  # Plein, tirets, mixte, pointillé
+# Définition des styles de lignes et des épaisseurs
+
 ligne_styles =['solid', 'dot', 'dash', 'longdash', 'dashdot', 'longdashdot']
-ligne_epaisseur = [1.5, 2, 3]  
+ligne_epaisseur = [1.5, 2.5, 3.5]  
 
 #Fonction de creation du graphe des prévisions
 import plotly.graph_objects as go
@@ -88,7 +88,7 @@ def creation_graphique(df_data, palette, id_modele, var_id, var_x, var_y, label_
             y=df_modele[var_y], 
            # text=None,
             #hovertemplate='%{fullData.name}<br>x: %{x}<br>y: %{y}<extra></extra>',
-            mode='lines', # Type de courbe
+            mode='lines+markers' if len(df_modele) == 1 else 'lines', # Type de courbe et point si 
             name=nom_modele, # Légende
             line=dict(
                 color=palette[i % len(palette)], # Couleur personnalisée
@@ -98,17 +98,6 @@ def creation_graphique(df_data, palette, id_modele, var_id, var_x, var_y, label_
             ),
             showlegend=True
         ))
-    
-        """
-    # Ajoute le nom du modèle à la fin de la courbe
-        fig.add_annotation(
-            x=df_modele[var_x].iloc[-1],
-            y=df_modele[var_y].iloc[-1],
-            text=nom_modele,
-            showarrow=False,
-            font=dict(color=palette[i % len(palette)], size=12)
-        )
-        """
 
         # Si aucune donnée n'a été sélectionnée, affiche un message
         if not donnees_trouvees:
@@ -129,48 +118,21 @@ def creation_graphique(df_data, palette, id_modele, var_id, var_x, var_y, label_
 
     # Mise à jour des axes et options d’interaction
     fig.update_layout(
-        legend=dict(font=dict(color='black'),bordercolor='black',borderwidth=1),
+        legend=dict(font=dict(color='black'), bordercolor='black', borderwidth=1, orientation="h",
+                    yanchor="middle", y=1.18,xanchor="center", x=0.5),
         paper_bgcolor='white',  
         plot_bgcolor='white', 
         xaxis=dict(title=dict(text=label_x, font=dict(color='black')), tickfont=dict(color='black'),showline=True),
         yaxis=dict(title=dict(text=label_y, font=dict(color='black')), tickfont=dict(color='black'),showline=True),
-        #xaxis_title=label_x, 
-        #yaxis_title=label_y, 
         hovermode='x unified', # Info-bulle commune sur l’axe X
-        #hovermode='closest', # Info-bulle sur le point
         dragmode='zoom', # Activation du zoom interactif par sélection
-        margin=dict(t=10, b=10, l=10, r=10) # marges reduites
+        margin=dict(t=100, b=10, l=10, r=10) # marges reduites
     )
     fig.update_traces(text=None, hoverinfo='name+x+y')
 
     return fig
-"""
-def creation_graphique(df_data,palette,id_modele,var_id,var_x,var_y,label_x,label_y):
-   
-    # Création de la figure
-    fig, ax = plt.subplots(figsize=(10, 5))
-    # boucle sur les id_modele pour récuperer les données et créer le tableau
-    for i, modele in enumerate(id_modele):
-        df_modele=df_data[df_data[var_id]==modele]
-        nom_modele = df_modele["nom donnee"].iloc[0] # Récupération du nom du modèle
-        ax.plot(df_modele[var_x], df_modele[var_y], 
-                label=nom_modele,
-                color=palette[i % len(palette)], 
-                linestyle=ligne_styles[i % len(ligne_styles)], 
-                linewidth=ligne_epaisseur[i % len(ligne_epaisseur)])
-    
 
-    # Ajout des titres et labels
-    ax.set_xlabel(label_x, fontsize=12)
-    ax.set_ylabel(label_y, fontsize=12)
 
-    # Ajout de la légende
-    ax.legend()
-    plt.tight_layout()
-
-    return fig
-  
-"""
 
 #Fonction pour créer le tableau des métriques
 def creation_tableau (df_kpi_selection):
@@ -203,13 +165,7 @@ def creation_tableau (df_kpi_selection):
                 **style_cells
             )
         )])
-        """
-        tab.update_layout(
-            autosize=False,
-            height=100,
-            margin=dict(t=0, l=0, r=0, b=0)
-        )"
-        """
+        
         return tab
     
     # Pivot pour avoir les indicateurs en colonnes 

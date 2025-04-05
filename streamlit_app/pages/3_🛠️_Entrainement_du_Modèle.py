@@ -89,7 +89,7 @@ def show():
                 ##time.sleep(1)  # Simuler le temps de traitement
 
             ##progress_bar.empty()  # Supprimer la progress bar après la fin de l'entraînement
-            st.success("Entraînement terminé.")
+            st.success("✅ Entraînement terminé.")
 
             # Après un (ré)entrainement de modèle, l'historique des resultats aura besoin d'être recalculé lors de la prochaine prédiction.
             if 'prediction_historique_recalculee' in st.session_state:
@@ -173,7 +173,7 @@ def show():
                     for model_file in os.listdir("streamlit_app/static/modeles/modeles_entraines"):
                         if model_file.endswith(".pth"):
                             os.remove(os.path.join("streamlit_app/static/modeles/modeles_entraines", model_file))
-                    st.success("Tous les modèles ont été supprimés.")
+                    st.success("✅ Tous les modèles ont été supprimés.")
                     # Mettre à jour la liste déroulante après suppression
                     st.rerun()
         else:
