@@ -45,24 +45,6 @@ def show():
             # Besoin de supprimer les resultats dans la sous structure model_info egalement pour ne pas garder un lien avec les anciens resultats.
             st.session_state.model_info = []
 
-    # Date de la première observation dans la série des temps observés
-    if "date_premiere_observation" not in st.session_state:
-        st.session_state.date_premiere_observation = "2025-02-10 00:01:00"  # Default value
-
-    date_premiere_observation = st.text_input(
-        "Date de la première observation (format: YYYY-MM-DD HH:MM:SS)",
-        value=st.session_state.date_premiere_observation,
-        help="Entrez une date au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'."
-    )
-
-    # Validate the date format and update session state
-    try:
-        pd.to_datetime(date_premiere_observation, format="%Y-%m-%d %H:%M:%S")
-        st.session_state.date_premiere_observation = date_premiere_observation
-    except ValueError:
-        st.error("Erreur: La date doit être au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'.")
-        return
-
     # S'assurer que les données sont sous forme de DataFrame avec une colonne 'value'
     if not isinstance(st.session_state.prediction_data, pd.DataFrame) or 'value' not in st.session_state.prediction_data.columns:
         st.session_state.prediction_data = pd.DataFrame({'value': st.session_state.prediction_data.values.flatten()})

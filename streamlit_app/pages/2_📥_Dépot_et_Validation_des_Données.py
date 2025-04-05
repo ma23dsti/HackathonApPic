@@ -36,6 +36,24 @@ def show():
 
     check_dependencies("Dépot et Validation des Données")
 
+    # Date de la première observation dans la série des temps observés
+    if "date_premiere_observation" not in st.session_state:
+        st.session_state.date_premiere_observation = "2025-02-10 00:01:00"  # Default value
+
+    date_premiere_observation = st.text_input(
+        "Date de la première observation (format: YYYY-MM-DD HH:MM:SS)",
+        value=st.session_state.date_premiere_observation,
+        help="Entrez une date au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'."
+    )
+
+    # Validate the date format and update session state
+    try:
+        pd.to_datetime(date_premiere_observation, format="%Y-%m-%d %H:%M:%S")
+        st.session_state.date_premiere_observation = date_premiere_observation
+    except ValueError:
+        st.error("Erreur: La date doit être au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'.")
+        return
+
     st.write(f"Veuillez entrer les données pour les {taille_fenetre_observee} dernières secondes.")
 
     # Espace de dépôt des données
