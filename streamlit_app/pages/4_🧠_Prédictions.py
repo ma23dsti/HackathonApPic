@@ -131,7 +131,13 @@ def show():
 
         # Afficher la prédiction du dernier modèle entrainé.
         plt.figure(figsize=(12, 6))
-        plt.plot(x_observees, y_observees , label="Données observées", color="blue", linestyle="-")
+        plt.plot(
+            x_observees, 
+            y_observees, 
+            label="Données observées", 
+            color="blue", 
+            linestyle="-"
+        )
         #plt.plot(st.session_state.prediction_data.index, st.session_state.prediction_data['value'], label="Données d'entrée", color='blue')
         if 'entrainement_modele' in st.session_state:
             if st.session_state.entrainement_modele==True:
@@ -140,7 +146,15 @@ def show():
             with open("streamlit_app/static/modeles/modele_par_defaut/modele_parametres.json", "r") as f:
                 params = json.load(f)
                 nrmse_courant = params["kpi"]["nrmse"]
-        plt.plot(st.session_state.predictions_df['Index'], st.session_state.predictions_df['Predictions'], label=f'Prédictions - NRMSE {nrmse_courant:.4f}', color='red', linestyle="--")
+        plt.plot(
+            st.session_state.predictions_df['Index'],
+            st.session_state.predictions_df['Predictions'],
+            label=f'Prédictions - NRMSE {nrmse_courant:.4f}',
+            color='red',
+            linestyle="--",
+            marker='o',  # Use circles as markers
+            markersize=2  # Adjust marker size
+        )
         plt.axvline(x=len(st.session_state.prediction_data), color='black', linestyle='--')
         plt.xlabel("Index")
         plt.ylabel("Valeur")
@@ -175,10 +189,12 @@ def show():
         for i, modele in enumerate(modeles):
             plt.plot(
                 x_predictions,
-                modele["donnees_predites"]["en_unite_mesure"],  # Access "en_unite_mesure"
+                modele["donnees_predites"]["en_unite_mesure"],
                 label=f'Prédictions - {modele["nom"]} - NRMSE {modele["kpi"]["nrmse"]:.4f}',
                 color=couleurs[i % len(couleurs)],
-                linestyle="--"
+                linestyle="--",
+                marker='x',  # Use crosses as markers
+                markersize=2  # Adjust marker size
             )
         # Ajouter une ligne verticale pour séparer observations et prédictions
         plt.axvline(x=max(x_observees), color="black", linestyle="--")
