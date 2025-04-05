@@ -46,40 +46,6 @@ def show():
         st.error("Erreur: La date doit être au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'.")
         return
 
-    if st.button("Nettoyer les dossiers de validation"):
-        # Vérifier si le dossier existe
-        if os.path.exists(donnees_a_la_volee_dir) and os.path.isdir(donnees_a_la_volee_dir):
-            # Loop through all files in the directory and remove them
-            for file_name in os.listdir(donnees_a_la_volee_dir):
-                file_path = os.path.join(donnees_a_la_volee_dir, file_name)
-                try:
-                    if os.path.isfile(file_path):
-                        os.remove(file_path)
-                    elif os.path.isdir(file_path):
-                        shutil.rmtree(file_path)  # S'il y a un sous dossiers, le supprimer.
-                except Exception as e:
-                    print(f"Error deleting {file_path}: {e}")
-            print("Tous les fichiers de 'donnees_a_la_volee/' ont été supprimés.")
-        else:
-            print("Le dossier 'donnees_preprocessees/donnees_a_la_volee/' n'existe pas.")
-
-    if st.button("Nettoyer le dossier des resultats"):
-        # Vérifier si le dossier existe
-        if os.path.exists(resultats_a_la_volee_dossier) and os.path.isdir(resultats_a_la_volee_dossier):
-            # Loop through all files in the directory and remove them
-            for file_name in os.listdir(resultats_a_la_volee_dossier):
-                file_path = os.path.join(resultats_a_la_volee_dossier, file_name)
-                try:
-                    if os.path.isfile(file_path):
-                        os.remove(file_path)
-                    elif os.path.isdir(file_path):
-                        shutil.rmtree(file_path)  # S'il y a un sous dossiers, le supprimer.
-                except Exception as e:
-                    print(f"Error deleting {file_path}: {e}")
-            print("Tous les fichiers de 'donnees_a_la_volee/' ont été supprimés.")
-        else:
-            print("Le dossier 'resultats/donnees_a_la_volee/' n'existe pas.")
-
     st.write("Veuillez entrer les données pour les ", taille_fenetre_observee, " dernières secondes:")
 
     # Espace de dépôt des données d'entraînement
@@ -122,10 +88,6 @@ def show():
             st.error(f"Erreur lors de la lecture du fichier de prédiction : {e}")
             prediction_data = None
     else:
-        # Données fictives pour les tests
-        prediction_data = np.random.rand(1, taille_fenetre_observee)
-        st.write("Données observées fictives:", prediction_data)
-
         # Jeu de données de test par défaut afin de pouvoir effectuer des tests
         prediction_data = pd.read_csv(preprocessing_dir + "donnees_par_defaut/x_valid_s" + str(sliding_window_valid) + "_o" + str(taille_fenetre_observee) + "_p" + str(st.session_state.horizon_predictions) + "-1.csv", header=None)
         st.write(f"Format des données d'entrée par défaut pour la prédiction - Nombre de lignes: {prediction_data.shape[0]:,}, Nombre de colonnes: {prediction_data.shape[1]}")
@@ -164,6 +126,43 @@ def show():
 
         else:
             st.error("Erreur: Aucun fichier n'a été téléchargé.")
+
+    # Séparation pour la section du cleaning
+    st.divider()
+
+    if st.button("Nettoyer les dossiers de validation"):
+        # Vérifier si le dossier existe
+        if os.path.exists(donnees_a_la_volee_dir) and os.path.isdir(donnees_a_la_volee_dir):
+            # Loop through all files in the directory and remove them
+            for file_name in os.listdir(donnees_a_la_volee_dir):
+                file_path = os.path.join(donnees_a_la_volee_dir, file_name)
+                try:
+                    if os.path.isfile(file_path):
+                        os.remove(file_path)
+                    elif os.path.isdir(file_path):
+                        shutil.rmtree(file_path)  # S'il y a un sous dossiers, le supprimer.
+                except Exception as e:
+                    print(f"Error deleting {file_path}: {e}")
+            print("Tous les fichiers de 'donnees_a_la_volee/' ont été supprimés.")
+        else:
+            print("Le dossier 'donnees_preprocessees/donnees_a_la_volee/' n'existe pas.")
+
+    if st.button("Nettoyer le dossier des resultats"):
+        # Vérifier si le dossier existe
+        if os.path.exists(resultats_a_la_volee_dossier) and os.path.isdir(resultats_a_la_volee_dossier):
+            # Loop through all files in the directory and remove them
+            for file_name in os.listdir(resultats_a_la_volee_dossier):
+                file_path = os.path.join(resultats_a_la_volee_dossier, file_name)
+                try:
+                    if os.path.isfile(file_path):
+                        os.remove(file_path)
+                    elif os.path.isdir(file_path):
+                        shutil.rmtree(file_path)  # S'il y a un sous dossiers, le supprimer.
+                except Exception as e:
+                    print(f"Error deleting {file_path}: {e}")
+            print("Tous les fichiers de 'donnees_a_la_volee/' ont été supprimés.")
+        else:
+            print("Le dossier 'resultats/donnees_a_la_volee/' n'existe pas.")
 
 if __name__ == "__main__":
     show()

@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -14,11 +15,13 @@ display_menu()
 
 preprocessing_dir = "streamlit_app/static/donnees/donnees_preprocessees/"
 dossier_donnees_pour_entrainement = preprocessing_dir + "donnees_a_la_volee/"
-dossier_modele_courant = "streamlit_app/static/modeles/modele_courant/"
 
 def show():
     st.title("Prédictions")
     check_dependencies("Prédictions") 
+
+    # Define dossier_modele_courant at the start of the function
+    dossier_modele_courant = "streamlit_app/static/modeles/modele_courant/"
 
     # Tailles nécessaires pour la prédiction'
     horizon = st.session_state.horizon_predictions
@@ -45,15 +48,49 @@ def show():
             prediction_data_reshaped = np.array(st.session_state.prediction_data).flatten().reshape(1, -1)
             # Ensure we have 60 features
             if prediction_data_reshaped.shape[1] != taille_fenetre_observee:
-                st.error(f"Erreur: Le modèle attend 60 colonnes, mais {prediction_data_reshaped.shape[1]} ont été détectées.")
+                st.error(f"Erreur: Le modèle attend {taille_fenetre_observee} colonnes, mais {prediction_data_reshaped.shape[1]} ont été détectées.")
                 return
+
+            if st.session_state.prediction_avec_model_charge:
+                # Ensure model_charge is not None
+                if not st.session_state.model_charge:
+                    # Set default model path
+                    default_model_path = "streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_restreint_o60_p5/"
+                    if os.path.isdir(default_model_path):
+                        st.session_state.model_charge = default_model_path
+                        st.info(f"Aucun modèle chargé. Le modèle par défaut sera utilisé : {default_model_path}")
+                    else:
+                        st.error(f"Erreur : Le modèle par défaut n'existe pas au chemin spécifié : {default_model_path}")
+                        return
+
+                # Load the model from the provided path directory to the current model directory
+                fichiers_modele = ["modele.pth", "modele_parametres.json", "x_scaler.pkl", "y_scaler.pkl"]
+                os.makedirs(dossier_modele_courant, exist_ok=True)
+
+                # Copier chaque fichier dans le dossier du modèle courant
+                for fichier in fichiers_modele:
+                    chemin_source = os.path.join(st.session_state.model_charge, fichier)
+                    chemin_destination = os.path.join(dossier_modele_courant, fichier)
+
+                    # Vérifier si le fichier existe dans le dossier de destination et le supprimer
+                    if os.path.exists(chemin_destination):
+                        os.remove(chemin_destination)
+                        print(f"Supprimé : {chemin_destination}")
+
+                    # Vérifier si le fichier source existe avant la copie
+                    if os.path.exists(chemin_source):  
+                        shutil.copy(chemin_source, chemin_destination)
+                        print(f"Copié : {fichier} → {chemin_destination}")
+                    else:
+                        print(f"Fichier introuvable : {chemin_source}")
+
             predictions = predire_le_traffic(prediction_data_reshaped)
             st.success(" Prédiction effectuée avec succès.", icon="✅")
 
             predictions = np.array(predictions).flatten()
             # Check lengths to prevent errors
             if len(predictions) != horizon:  # Expected next horizon values in time series
-                st.error(f"Erreur: Le modèle a généré {len(predictions)} valeurs, mais 5 étaient attendues.")
+                st.error(f"Erreur: Le modèle a généré {len(predictions)} valeurs, mais {horizon} étaient attendues.")
                 return
 
             # Create predictions DataFrame
@@ -125,6 +162,13 @@ def show():
             linestyle="--",
             marker='o',  # Use circles as markers
             markersize=2  # Adjust marker size
+        )
+        # Add a line connecting the last observed point to the first predicted point
+        plt.plot(
+            [x_observees[-1], st.session_state.predictions_df['Index'].iloc[0]],
+            [y_observees[-1], st.session_state.predictions_df['Predictions'].iloc[0]],
+            color="red",
+            linestyle="--"
         )
         plt.axvline(x=len(st.session_state.prediction_data), color='black', linestyle='--')
         plt.xlabel("Index")

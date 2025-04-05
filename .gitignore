@@ -26,3 +26,4 @@ modeles_entraines/
 
 # Ignorer les autres fichiers non voues à être versionnés
 *.png
+*.zip

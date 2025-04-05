@@ -147,10 +147,6 @@ def entrainer_le_modèle(dossier_donnees):
         fichiers_manquants = [f for f in noms_fichiers_entrainements if f not in fichiers]
         if fichiers_manquants:
             st.write(f"Les fichiers suivants sont manquants : {fichiers_manquants}")
-        else:
-            st.write("Entraînement avec les fichiers suivants en cours ...")
-            for fichier in noms_fichiers_entrainements:
-                st.write(fichier)
         
         # Load the CSV files
         x_train = pd.read_csv(dossier_donnees + nom_fichier_x_train, header=None)
@@ -193,9 +189,18 @@ def entrainer_le_modèle(dossier_donnees):
         plot_placeholder = st.empty()
 
         # Training Loop with Time Series Handling (No Shuffling)
+        progress_bar = st.progress(0)  # Initialize the progress bar
+        progress_text = st.empty()  # Placeholder for progress text
+        kpi_placeholder = st.empty()  # Placeholder for KPI display
+
+        # Display files used for training outside the loop
+        progress_text.write(
+            f"Fichiers utilisés: {nom_fichier_x_train}, {nom_fichier_y_train}, {nom_fichier_x_valid}, {nom_fichier_y_valid}"
+        )
+
         for epoch in range(epochs):
             # Shuffle les données d'entrainement après chaque epoch.
-            # Le shuffling est essfectué entre portions de série temporelle pour un meilleur apprentissage,
+            # Le shuffling est effectué entre portions de série temporelle pour un meilleur apprentissage,
             # et non entre toutes les données brutes unitaires pour ne pas supprimer les liens de la série temporelle.
             indices = np.arange(len(x_train_tensor))
             np.random.shuffle(indices)
@@ -228,7 +233,12 @@ def entrainer_le_modèle(dossier_donnees):
                 val_outputs = model(x_valid_tensor)
                 val_loss = criterion(val_outputs, y_valid_tensor).item()
 
-            #st.write(f"Epoch [{epoch+1}/{epochs}] - Train Loss: {avg_train_loss:.4f} - Val Loss: {val_loss:.4f}")
+            # Update the progress bar
+            progress_bar.progress((epoch + 1) / epochs)
+
+            # Clear the previous KPI line and display the new one
+            kpi_placeholder.empty()
+            kpi_placeholder.write(f"Epoch {epoch + 1}/{epochs} - Training Loss: {avg_train_loss:.4f} - Validation Loss: {val_loss:.4f}")
 
             # Mettre à jour en live le graphique des métriques
             training_monitor_notebook.update_plot(epoch, avg_train_loss, val_loss)
@@ -261,7 +271,7 @@ def entrainer_le_modèle(dossier_donnees):
         y_pred = np.where(y_pred < 0, 0, y_pred)
 
         # Calculer le nRMSE
-        nrmse_KPI = np.sqrt(mean_squared_error(y_valid, y_pred))/(max_y_val-min_y_val)
+        nrmse_KPI = np.sqrt(mean_squared_error(y_valid, y_pred)) / (max_y_val - min_y_val)
         st.write(f'NRMSE: {nrmse_KPI}')
         st.session_state.nrmse_value = nrmse_KPI
 

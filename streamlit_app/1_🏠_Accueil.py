@@ -19,6 +19,11 @@ def show():
         st.session_state['horizon_predictions'] = None
     if 'premiere_prediction_seule' not in st.session_state:
         st.session_state['premiere_prediction_seule'] = None
+    if 'prediction_avec_model_charge' not in st.session_state:
+        st.session_state['prediction_avec_model_charge'] = None
+    # Reset model_charge when on the home page
+    if "model_charge" in st.session_state:
+        st.session_state.model_charge = None
 
     # Question pour l'utilisateur
     choix_modele_options = {
@@ -130,6 +135,7 @@ def show():
             st.session_state['sliding_window_train'] = st.session_state.taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][st.session_state.horizon_predictions]["taille_pas_glissant_train"]
             st.session_state['sliding_window_valid'] = st.session_state.taille_fenetre_a_predire_mapping["taille_fenetre_a_predire"][st.session_state.horizon_predictions]["taille_pas_glissant_valid"]
             st.session_state['premiere_prediction_seule'] = True
+            
             st.session_state.valid_acceuil = True
             st.rerun()
         
