@@ -31,46 +31,36 @@ palette_daltonien=[
                    "rgb(102,37,6)"
                   ]
 
-"""
-palette_daltonien=["rgb(254,227,145)",
-                   "rgb(254,196,79)", 
-                   "rgb(251,154,41)",
-                   "rgb(236,112,20)",
-                   "rgb(204,76,2)",
-                   "rgb(153,52,4)",
-                   "rgb(102,37,6)"]
 
-
-palette_daltonien=["rgb(57,75,154)",
-                   "rgb(110,166,205)",
-                   "rgb(152,202,225)",
-                   "rgb(192,228,239)",
-                   "rgb(234,236,204)",
-                   "rgb(254,218,139)",
-                   "rgb(254,227,145)",
-                   "rgb(254,196,79)", 
-                   "rgb(251,154,41)",
-                   "rgb(236,112,20)",
-                   "rgb(253,279,201)",
-                   "rgb(246,126,75)",
-                   "rgb(221,61,45)",
-                   "rgb(204,76,2)",
-                   "rgb(153,52,4)",
-                   "rgb(102,37,6)"]
-
-"""
 # Définition des styles de lignes et des épaisseurs
 
 ligne_styles =['solid', 'dot', 'dash', 'longdash', 'dashdot', 'longdashdot']
 ligne_epaisseur = [1.5, 2.5, 3.5]  
 
-#Fonction de creation du graphe des prévisions
-import plotly.graph_objects as go
-
-
 
 def creation_graphique(df_data, palette, id_modele, var_id, var_x, var_y, label_x, label_y):
-    
+    """
+    Crée un graphique interactif avec Plotly affichant les courbes des données sélectionnées
+    (données d'entrée et/ou prédictions) selon les modèles fournis.
+
+    Chaque courbe est personnalisée en couleur, style et épaisseur de ligne, avec une légende 
+    et un survol informatif.
+    Si aucune donnée n'est trouvée, un message est affiché à la place du graphe.
+
+    Paramètres :
+        df_data (pd.DataFrame) : Données filtrées à afficher (entrées ou prédictions).
+        palette (list[str]) : Liste des couleurs utilisées pour différencier les modèles.
+        id_modele (list[str]) : Liste des identifiants des modèles à afficher.
+        var_id (str) : Nom de la colonne identifiant les séries (ex. 'id donnee').
+        var_x (str) : Nom de la colonne à utiliser pour l’axe des X (ex. 'temps relatif').
+        var_y (str) : Nom de la colonne à utiliser pour l’axe des Y (ex. 'valeur').
+        label_x (str) : Étiquette de l’axe X.
+        label_y (str) : Étiquette de l’axe Y.
+
+    Résultat retourné :
+        - go.Figure : Graphique Plotly avec les courbes des modèles sélectionnés 
+        ou un message d’absence de données.
+    """
     # Création de la figure Plotly
     fig = go.Figure()
 
@@ -136,6 +126,19 @@ def creation_graphique(df_data, palette, id_modele, var_id, var_x, var_y, label_
 
 #Fonction pour créer le tableau des métriques
 def creation_tableau (df_kpi_selection):
+    """
+    Crée un tableau interactif Plotly affichant les indicateurs de performance (KPI) 
+    pour chaque modèle sélectionné.
+
+    Si aucun KPI n’est disponible, la fonction affiche un tableau contenant un message d’information.
+    Sinon, les données sont pivotées pour présenter chaque indicateur en colonne.
+
+    Paramètre :
+        df_kpi_selection (pd.DataFrame) : Données KPI filtrées sur la sélection des modeles de prédictions
+
+    Résultat retourné :
+        - go.Figure : Tableau Plotly affichant les métriques ou un message si aucun KPI n'est sélectionné.
+    """
 
     # style commun
     style_header = dict(

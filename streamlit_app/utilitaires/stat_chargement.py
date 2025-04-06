@@ -24,7 +24,6 @@ def charger_fichier_json():
     script_dir = os.path.dirname(__file__)
     # Ajouter chemin vers resultats/donnees_a_la_volee/resultats.json
     file_path = os.path.join(script_dir, '..', 'resultats/donnees_a_la_volee', 'resultats.json')
-    #file_path = os.path.join(script_dir, '..', 'resultats/donnees_a_la_volee', 'resultats_augmente.json')
     
     # Normalisation du chemin
     file_path = os.path.abspath(file_path)
@@ -47,8 +46,22 @@ def charger_fichier_json():
 
 def extraire_donnees_entree(data):
     """
-    Fonction pour créer un DataFrame à partir des données d'entrée présentes dans le fichier JSON.
-    Prend en charge deux unités de mesure avec leurs séries respectives.
+    Crée un DataFrame à partir des données d'entrée présentes dans le JSON.
+    Gère deux unités de mesure différentes et retourne les métadonnées associées.
+
+    Paramètre :
+        data (dict): Dictionnaire chargé depuis le fichier JSON.
+
+    Retourne:
+        tuple:
+            - pd.DataFrame: Données d'entrée combinées au format tabulaire.
+            - dict: Données de la clé 'donnees_entrees' issues du JSON.
+            - list[str]: Liste des unités de mesure utilisées.
+            - list[str]: Liste contenant l'identifiant unique pour les données d'entrée.
+
+    Exceptions:
+        KeyError: Si une clé obligatoire est manquante dans le dictionnaire JSON.
+        ValueError: Si des unités sont vides ou si les longueurs des séries ne correspondent pas.
     """
     if 'donnees_entrees' not in data:
         raise KeyError("Clé 'donnees_entrees' manquante dans le JSON.")
@@ -114,10 +127,27 @@ def extraire_donnees_entree(data):
 
 def extraire_donnees_prediction_et_kpi(data, entree):
     """
-    Fonction pour extraire les données de prédiction ainsi que les indicateurs de performance (KPI) 
-    pour chaque modèle présent dans le fichier JSON.
-    Gère deux unités de mesure avec leurs séries de valeurs respectives.
+    Extrait les données de prédiction et les indicateurs de performance (KPI) 
+    pour chaque modèle contenu dans le fichier JSON.
+
+    Cette fonction gère deux séries de valeurs correspondant aux deux unités de mesure
+    et vérifie la cohérence des informations avant construction du df final.
+
+    Paramètres :
+        data (dict) : Dictionnaire chargé à partir du fichier JSON.
+        entree (dict) : Partie du JSON correspondant aux données d'entrée, contenant les unités de mesure.
+
+    Résultats retournés :
+        - pd.DataFrame : Données de prédiction pour chaque modèle et chaque unité de mesure.
+        - list[dict] : Liste des KPI pour chaque modèle, avec identifiant, nom et valeur de chaque indicateur.
+        - dict : Partie du JSON correspondant à la section 'predictions'.
+
+    Exceptions levées :
+        - KeyError : Si une ou plusieurs clés attendues sont absentes dans la structure JSON.
+        - ValueError : Si les longueurs des séries de temps ou des valeurs ne correspondent pas.
+        - TypeError : Si les KPI ne sont pas sous forme de dictionnaire.
     """
+     
     if 'resultats' not in data or 'predictions' not in data['resultats']:
         raise KeyError("Clé 'resultats > predictions' manquante dans le fichier JSON.")
     
@@ -160,7 +190,7 @@ def extraire_donnees_prediction_et_kpi(data, entree):
                 'nom donnee': modele['nom'],
                 'unite mesure': entree['unite_mesure'],
                # 'format mesure': entree['format_mesure'],
-                'valeur': valeurs1[i]
+                'valeur': round(valeurs1[i],1)
             })
             # Série en unite_mesure_2
             donnees_prediction.append({
@@ -170,7 +200,7 @@ def extraire_donnees_prediction_et_kpi(data, entree):
                 'nom donnee': modele['nom'],
                 'unite mesure': entree['unite_mesure_2'],
                # 'format mesure': entree['format_mesure'],
-                'valeur': valeurs2[i]
+                'valeur': round(valeurs2[i], 1)
             })
 
         if 'kpi' not in modele:
@@ -189,7 +219,7 @@ def extraire_donnees_prediction_et_kpi(data, entree):
                 'id donnee': modele['id'],
                 'nom donnee': modele['nom'],
                 'indicateur': indicateur,
-                'valeur': valeur
+                'valeur': round(valeur, 4)
             })
 
     df_prediction = pd.DataFrame(donnees_prediction)
@@ -201,8 +231,21 @@ def extraire_donnees_prediction_et_kpi(data, entree):
 
 def fusionner_et_convertir(df_entree, df_prediction):
     """
-    Fonction pour fusionner les données d'entrée et de prédiction,
-    et créer une version convertie selon l'unité utilisée dans les prédictions (Bit/s <-> Octets/s).
+    Fusionne les données d'entrée et de prédiction en un seul tableau.
+
+    Cette fonction vérifie que les deux jeux de données ne sont pas vides,
+    puis les concatène dans un même DataFrame.
+
+    Paramètres :
+        df_entree (pd.DataFrame) : Données entrée (observées initiales), extraites du fichier JSON.
+        df_prediction (pd.DataFrame) : Données de prédiction issues des modèles et extraites du fichier JSON.
+
+    Résultat retourné :
+        - pd.DataFrame : Jeu de données combiné contenant les données d'entrée
+                         et les prédictions pour les deux unités de mesure.
+
+    Exception levée :
+        - ValueError : Si l’un des deux tableaux est vide (aucune donnée à fusionner).
     """
     
     if df_entree.empty or df_prediction.empty:
@@ -217,16 +260,32 @@ def fusionner_et_convertir(df_entree, df_prediction):
 
 def obtenir_info_metadata(df_final, df_donnees_entrees, df_prediction, prediction, entree):
     """
-    Fonction pour extraire les métadonnées nécessaires à l'affichage et à l'analyse :
-    - colonnes temporelles
-    - identifiants de modèles
-    - formats de mesure
-    - unités, etc.
-    """
-    """
-    # création d'un dictionnaire pour avoir les combinaisons de mesure + format possibles
-    mesure_format_unique = df_final[['unite mesure', 'format mesure']].drop_duplicates()
-    mesure_format = mesure_format_unique.to_dict(orient='list')
+    Extrait les métadonnées nécessaires pour l'affichage et l'analyse des résultats.
+
+    Cette fonction permet de récupérer :
+    - les colonnes temporelles à utiliser pour l’axe des abscisses,
+    - les identifiants des modèles (hors modèle de moyenne),
+    - le nombre de modèles,
+    - l'identifiant du modèle moyen,
+    - l’unité de mesure par défaut,
+    - les colonnes utiles pour les regroupements ou les filtrages.
+
+    Paramètres :
+        df_final (pd.DataFrame) : Données fusionnées contenant entrées et prédictions.
+        df_donnees_entrees (pd.DataFrame) : Données d'entrée .
+        df_prediction (pd.DataFrame) : Données de prédiction.
+        prediction (dict) : Partie du JSON contenant les prédictions.
+        entree (dict) : Partie du JSON contenant les données d'entrée.
+
+    Résultats retournés :
+        - list[str] : Liste des noms de colonnes contenant une information temporelle.
+        - list[str] : Liste des identifiants des modèles (hors modèle moyen).
+        - int : Nombre total de modèles (hors modèle moyen).
+        - list[str] : Identifiant du modèle de moyenne (['moyenne'] - fixé dans le json).
+        - str : Unité de mesure par défaut (dans le json unite_mesure dans les 'donnees_entrees' 
+        correspond à l'unité sélectionné dans la page d'accueil).
+        - str : Nom de la colonne contenant les identifiants des données ('id donnee').
+        - str : Nom de la colonne contenant les valeurs numériques ('valeur').
     """
     # création de listes utiles pour filtrer sur le dataframe
     id_modele_moyen = ['moyenne'] # rappel Id modèle moyen (moyenne des prédictions)

@@ -57,21 +57,22 @@ def show():
     # Selection des parametres et variables
     affichage_modele_entree, choix_temps, affichage_ensemble_prediction, affichage_moyenne_prediction, choix_unite= selection_parametre(liste_unite,nb_modele)
     
-    #création d'une liste pour simplifier la gestion de la selection des affichages
+    #création d'un dictionnaire des options sélectionnées pour les modeles pour simplifier la gestion de la selection des affichages
     selection_options = {"affichage_modele_entree": st.session_state.affichage_modele_entree,
                          "affichage_ensemble_prediction": st.session_state.affichage_ensemble_prediction,
                          "affichage_moyenne_prediction": st.session_state.affichage_moyenne_prediction}
     
 
     min_date, max_date, min_date_entree, max_date_entree ,min_date_prediction ,max_date_prediction=selection_min_max_choix_temps(choix_temps, df_final,df_donnees_entrees,df_prediction)
-     
 
+    # Détermine les valeurs par défaut du slider en fonction du type de temps sélectionné 
     if choix_temps == "temps horaire":
         valeur_defaut = (df_final["temps horaire"].min().to_pydatetime(), df_final["temps horaire"].max().to_pydatetime())
     else:
         valeur_defaut = (int(df_final["temps relatif"].min()), int(df_final["temps relatif"].max()))
 
-    # Forcer la mise à jour du session_state si le type change
+    # Si le type de temps sélectionné a changé (horaire ↔ relatif), 
+    # on force la réinitialisation de la plage temporelle sélectionnée pour éviter des erreurs de type
     if "selection_date" in st.session_state:
         ancien_type = type(st.session_state["selection_date"][0])
         nouveau_type = type(valeur_defaut[0])
@@ -178,7 +179,7 @@ def show():
                 mime="application/zip"
             )
 
-    # Réinitialisation du ZIP si l'utilisateur change une sélection
+    # Si modification dans les sélections, on invalide l'ancien zip (zip_ready=False) pour forcer sa régénération
     if any(st.session_state[key] for key in {**export_options["formats"], **export_options["donnees"]}):
         st.session_state.zip_ready = False  # Force la régénération
         st.session_state.zip_path = None  # Supprime le chemin du fichier
