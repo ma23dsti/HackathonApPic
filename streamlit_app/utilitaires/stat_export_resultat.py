@@ -109,7 +109,7 @@ def generer_pdf(fig_buffer, tab_buffer, export_pdf, export_prediction, export_kp
         export_pdf (bool) : Indique si l'utilisateur a sélectionné l'export au format PDF.
         export_prediction (bool) : Indique si le graphique doit être intégré au PDF.
         export_kpi (bool) : Indique si le tableau des métriques doit être intégré au PDF.
-        titre_graphe (str) : Titre principal à afficher dans le rapport PDF.
+        titre_graphe (str) : Titre principal à afficher dans le rapport PDF.- plus utilisé
 
     Résultat retourné :
         - bytes : Contenu binaire du fichier PDF généré (ou None si `export_pdf` est désactivé).
@@ -134,7 +134,7 @@ def generer_pdf(fig_buffer, tab_buffer, export_pdf, export_prediction, export_kp
     if export_prediction:
         pdf_rapport.setFont("Helvetica", 12)
         pdf_rapport.setFillColorRGB(24/255, 112/255, 184/255)
-        pdf_rapport.drawString(100, y_position, titre_graphe)
+        pdf_rapport.drawString(100, y_position, "Graphique de prédiction des différents modèles obtenus")
         y_position -= 20
 
         try:
