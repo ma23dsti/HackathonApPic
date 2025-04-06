@@ -6,6 +6,7 @@ import numpy as np
 from menu import display_menu
 from dependency_manager import check_dependencies
 from utilitaires.mise_page import afficher_bandeau_titre
+from streamlit_extras.add_vertical_space import add_vertical_space
 
 display_menu()
 
@@ -42,6 +43,9 @@ def show():
     # Date de la première observation dans la série des temps observés
     if "date_premiere_observation" not in st.session_state:
         st.session_state.date_premiere_observation = "2025-02-10 00:01:00"  # Default value
+
+    # Ajout d'une espace vertical pour le rendu global de la page
+    add_vertical_space(1) 
 
     date_premiere_observation = st.text_input(
         "Date de la première observation (format: YYYY-MM-DD HH:MM:SS)",

@@ -131,9 +131,6 @@ def show():
             st.session_state.prediction_historique_recalculee = True
             st.session_state.nouveau_depot_donnees = False
 
-        st.write("### Prédictions générées:")
-        st.write(st.session_state.predictions_df)
-
         # Récupération des données depuis st.session_state
         donnees_entrees = st.session_state.resultats["donnees_entrees"]
         donnees_predictions = st.session_state.resultats["resultats"]["predictions"]
@@ -236,6 +233,8 @@ def show():
         plt.legend()
         st.pyplot(plt)
 
+    st.write("### Prédictions générées:")
+    st.write(st.session_state.predictions_df)
 
     # Ajouter une séparation
     st.markdown("---")

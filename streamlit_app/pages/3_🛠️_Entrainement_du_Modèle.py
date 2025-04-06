@@ -52,8 +52,6 @@ def show():
     if 'valid_entrainement' not in st.session_state:
         st.session_state.valid_entrainement = False
 
-    # Valeur de baseline pour un modèle de qualité moyenne/décente
-    baseline_nrmse = 0.15
 
     dossier_modeles_entraines = "streamlit_app/static/modeles/modeles_entraines/"  # Ensure this is defined here
 
@@ -67,8 +65,7 @@ def show():
                 st.session_state.resultats["resultats"]["predictions"].pop("modeles", None)
                 # Besoin de supprimer les resultats dans la sous structure model_info egalement pour ne pas garder un lien avec les anciens resultats.
                 st.session_state.model_info = []
-                # st.json(st.session_state.resultats)
-                # nouveau_depot_donnees mis à Faux pour ne pas cleaner les données de résultats lors de le prochaine étape du flow: les prédictions.
+                # nouveau_depot_donnees mis à Faux pour ne pas clean les données de résultats lors de le prochaine étape du flow: les prédictions.
                 st.session_state.nouveau_depot_donnees = False
 
         nb_pred_max = 10
@@ -84,6 +81,13 @@ def show():
             os.makedirs(dossier_donnees_pour_entrainement, exist_ok=True)
 
             entrainer_le_modèle(dossier_donnees_pour_entrainement)
+            # Récupération du baseline NRMSE pour la comparaison
+            baseline_nrmse = st.session_state.baseline_nrmse
+
+            col1, col2, col3 = st.columns(3)
+            col1.metric("NRMSE", f"{st.session_state.nrmse_value:.3f}", border=True)
+            col2.metric("RMSE", f"{st.session_state.rmse_value:.3f}", border=True)
+            col3.metric("MAE", f"{st.session_state.mae_value:.3f}", border=True)
 
             # Sauvegarder les fichiers du modèle entrainé
             fichiers_modele = ["modele.pth", "modele_parametres.json", "x_scaler.pkl", "y_scaler.pkl"]
@@ -108,7 +112,6 @@ def show():
                 else:
                     print(f"Fichier introuvable : {chemin_source}")
 
-            ##progress_bar.empty()  # Supprimer la progress bar après la fin de l'entraînement
             st.success("✅ Entraînement terminé.")
 
             # Après un (ré)entrainement de modèle, l'historique des resultats aura besoin d'être recalculé lors de la prochaine prédiction.
@@ -124,16 +127,15 @@ def show():
 
         # Section "Métrique"
         st.header("Evaluation de la qualité du modèle")
-        st.write(f"**NRMSE (Normalized Root Mean Square Error) :** {st.session_state.nrmse_value:.4f}")
+        st.metric("NRMSE", f"{st.session_state.nrmse_value:.3f}", border=True)
         with st.expander("Qu'est ce que le **NRMSE** ?"):
             st.write("""Le **NRMSE** est une mesure de l'erreur normalisée entre les prédictions et les valeurs réelles. C'est une métrique couramment utilisée pour l'évaluation de ce type de modèle.
                  Plus d'informations en cliquant [ici](https://docs.oracle.com/cloud/help/fr/pbcs_common/PFUSU/insights_metrics_RMSE.htm#PFUSU-GUID-FD9381A1-81E1-4F6D-8EC4-82A6CE2A6E74).""")
 
-        st.write(st.session_state.nrmse_value)
         # Estimation de la qualité du modèle par rapport à la base line
-        if st.session_state.nrmse_value < baseline_nrmse * 0.9:
+        if st.session_state.nrmse_value < st.session_state.baseline_nrmse * 0.9:
             st.success("La qualité du modèle est **bonne**. ✅")
-        elif baseline_nrmse * 0.9 <= st.session_state.nrmse_value <= baseline_nrmse * 1.1:
+        elif st.session_state.baseline_nrmse * 0.9 <= st.session_state.nrmse_value <= st.session_state.baseline_nrmse * 1.1:
             st.warning("La qualité du modèle est **moyenne**. ⚠️")
         else:
             st.error("La qualité du modèle est **mauvaise**. ❌")
@@ -142,7 +144,7 @@ def show():
         with st.expander("Comment la qualité du modèle est-elle déterminée ?"):
             st.write("""
                 La qualité du modèle est évaluée en comparant le NRMSE (Normalized Root Mean Square Error) du modèle entraîné
-                avec le NRMSE du modèle de référence pré-chargé sur la plateforme (valeur de référence: """, baseline_nrmse, """).
+                avec le NRMSE du modèle de référence pré-chargé sur la plateforme (valeur de référence: """, st.session_state.baseline_nrmse, """).
                 - Si le NRMSE du modèle est inférieur à 90% du NRMSE du modèle de référence, la qualité est considérée comme **bonne** ✅.
                 - Si le NRMSE est dans la plage [90% du NRMSE du modèle de référence, 110% du NRMSE du modèle de référence], la qualité est considérée comme **moyenne** ⚠️.
                 - Si le NRMSE est supérieur à 110% du NRMSE du modèle de référence, la qualité est considérée comme **mauvaise** ❌.
