@@ -46,8 +46,6 @@ class TrainingMonitorNotebook:
         plt.xticks(fontsize=6)
         plt.yticks(fontsize=6)
         plt.grid(True)
-
-        #mplcursors.cursor([train_line, val_line], hover=True)
         plt.show()
 
 # Instantiate the monitor
@@ -64,7 +62,7 @@ def entrainer_le_modèle(dossier_donnees):
     sliding_window_valid = st.session_state.sliding_window_valid
 
     # Dossier du modèle par défaut
-    dossier_modele_par_defaut = f"streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_restreint_o{taille_fenetre_observee}_p{horizon}/"
+    dossier_modele_par_defaut = f"streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_o{taille_fenetre_observee}_p{horizon}/"
     # Récupérer les fichiers du modèle par défaut à utiliser pour l'entrainement
     fichiers_modele = ["modele.pth", "modele_parametres.json", "x_scaler.pkl", "y_scaler.pkl"]
     dossier_modele_courant = "streamlit_app/static/modeles/modele_courant/"
@@ -87,6 +85,18 @@ def entrainer_le_modèle(dossier_donnees):
             print(f"Copié : {fichier} → {chemin_destination}")
         else:
             print(f"Fichier introuvable : {chemin_source}")
+
+        # Charger le nRMSE de référence à partir du fichier JSON et le sauvegarder dans st.session_state.baseline_nrmse
+        try:
+            with open(dossier_modele_courant + "modele_parametres.json", "r") as f:
+                params = json.load(f)
+                st.session_state.baseline_nrmse = params.get("kpi", {}).get("nrmse", None)
+        except FileNotFoundError:
+            st.session_state.baseline_nrmse = 0.15  # Valeur par défaut si le fichier n'est pas trouvé
+            st.write("Le fichier modele_parametres.json est introuvable.")
+        except json.JSONDecodeError:
+            st.session_state.baseline_nrmse = 0.15 # Valeur par défaut si le fichier n'est pas trouvé
+            st.write("Erreur lors du chargement du fichier modele_parametres.json.")
 
     # Architecture du modèle par défaut utilisé : BiLSTM
     class BiLSTMModel(nn.Module):
@@ -120,9 +130,6 @@ def entrainer_le_modèle(dossier_donnees):
     loaded_model.load_state_dict(torch.load(dossier_modele_courant + "modele.pth", map_location=device))
     # Affecter le modèle par défaut préentrainé pour utilisation
     model = loaded_model
-    # model.eval()  # Set model to evaluation mode
-    # Chargement du modèle par défaut non préentrainé
-    #model = BiLSTMModel(input_size, hidden_size, output_size).to(device)
 
     # Loss and Optimizer
     criterion = nn.MSELoss()
@@ -193,11 +200,6 @@ def entrainer_le_modèle(dossier_donnees):
         progress_text = st.empty()  # Placeholder for progress text
         kpi_placeholder = st.empty()  # Placeholder for KPI display
 
-        # Display files used for training outside the loop
-        progress_text.write(
-            f"Fichiers utilisés: {nom_fichier_x_train}, {nom_fichier_y_train}, {nom_fichier_x_valid}, {nom_fichier_y_valid}"
-        )
-
         for epoch in range(epochs):
             # Shuffle les données d'entrainement après chaque epoch.
             # Le shuffling est effectué entre portions de série temporelle pour un meilleur apprentissage,
@@ -238,7 +240,7 @@ def entrainer_le_modèle(dossier_donnees):
 
             # Clear the previous KPI line and display the new one
             kpi_placeholder.empty()
-            kpi_placeholder.write(f"Epoch {epoch + 1}/{epochs} - Training Loss: {avg_train_loss:.4f} - Validation Loss: {val_loss:.4f}")
+            kpi_placeholder.write(f"Epoch {epoch + 1}/{epochs} | Training Loss: {avg_train_loss:.4f} | Validation Loss: {val_loss:.4f}")
 
             # Mettre à jour en live le graphique des métriques
             training_monitor_notebook.update_plot(epoch, avg_train_loss, val_loss)
@@ -272,17 +274,17 @@ def entrainer_le_modèle(dossier_donnees):
 
         # Calculer le nRMSE
         nrmse_KPI = np.sqrt(mean_squared_error(y_valid, y_pred)) / (max_y_val - min_y_val)
-        st.write(f'NRMSE: {nrmse_KPI}')
+        # st.write(f'NRMSE: {nrmse_KPI}')
         st.session_state.nrmse_value = nrmse_KPI
 
         # Calculer le RMSE
         rmse_KPI = np.sqrt(mean_squared_error(y_valid, y_pred))
-        st.write(f'RMSE: {rmse_KPI}')
+        # st.write(f'RMSE: {rmse_KPI}')
         st.session_state.rmse_value = rmse_KPI
 
         # Calculer le MAE
         mae_KPI = round(mean_absolute_error(y_valid, y_pred), 5)
-        st.write(f'MAE: {mae_KPI}')
+        # st.write(f'MAE: {mae_KPI}')
         st.session_state.mae_value = mae_KPI
 
         # Ensure st.session_state.model_info is initialized

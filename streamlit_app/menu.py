@@ -24,6 +24,7 @@ def confirm_reset():
     if st.button("Retourner à l'accueil"):
         st.session_state.clear()
         clean_results_folder("streamlit_app/resultats/donnees_a_la_volee/")
+        clean_results_folder("streamlit_app/static/donnees/donnees_preprocessees/donnees_a_la_volee/")
         st.switch_page("1_🏠_Accueil.py")
 
 def clean_results_folder(folder_path):
@@ -76,7 +77,6 @@ def display_menu():
     # Ajouter un bouton personnalisé pour retour à l'accueil avec confirmation
     if st.sidebar.button("🏠 Accueil", key="home_button"):
         confirm_reset()
-       # clean_results_folder("streamlit_app/resultats/donnees_a_la_volee/")
 
 
     # Afficher le menu en fonction de l'état de 'choix_modele'
@@ -103,8 +103,6 @@ def display_menu():
     else:
         # Cas par défaut : afficher uniquement "Accueil"
         st.sidebar.markdown("""---""")
-        #st.sidebar.write("**session_state pour debug :**")
-        #st.sidebar.write(st.session_state)
     
     st.sidebar.markdown("""---""")
 
@@ -158,5 +156,5 @@ def display_menu():
 
     
     st.sidebar.markdown("""---""")
-    #st.sidebar.write("**session_state pour debug :**")
-    #st.sidebar.write(st.session_state)
+    st.sidebar.write("**session_state pour debug :**")
+    st.sidebar.write(st.session_state)

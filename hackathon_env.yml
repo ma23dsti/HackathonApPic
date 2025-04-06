@@ -4,17 +4,18 @@ channels:
   - defaults
 dependencies:
   - python=3.11
-  - flask
-  - joblib
-  - jsonschema
-  - matplotlib
-  - numpy
-  - pandas
-  - plotly
-  - pytorch
-  - reportlab
-  - scikit-learn
-  - streamlit
-  - streamlit-extras
+  - flask=3.1.0
+  - joblib=1.4.2
+  - jsonschema=4.23.0
+  - matplotlib=3.10.1
+  - numpy=2.2.3
+  - pandas=2.2.3
+  - plotly=6.0.0
+  - pytorch=2.6.0
+  - reportlab=4.3.1
+  - scikit-learn=1.6.1
+  - streamlit=1.43.2
+  - streamlit-extras=0.4.0
+  - pip # Installation de pip avant d'installer kaleido pour éviter les erreurs
   - pip:  # On a une erreur si on installe kaleido côté serveur avec conda.
-    - kaleido
+    - kaleido==0.2.1
