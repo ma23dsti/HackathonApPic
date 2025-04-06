@@ -145,7 +145,7 @@ def show():
 
     # Export des données selectionnées
     st.markdown("#### 📦 Sélection des paramètres d'export")
-    st.markdown("<p style='font-size:16px; font-style:italic;'>Sélectionner les données et format à exporter puis cliquer sur le bouton pour les exporter en fichier zip.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:16px; font-style:italic;'>Sélectionner les données et formats à exporter puis cliquer sur le bouton pour les exporter en fichier zip.</p>", unsafe_allow_html=True)
     st.markdown(" ")
     
 

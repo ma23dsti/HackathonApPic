@@ -42,26 +42,8 @@ def show():
 
     check_dependencies("Dépot et Validation des Données")
 
-    # Date de la première observation dans la série des temps observés
-    if "date_premiere_observation" not in st.session_state:
-        st.session_state.date_premiere_observation = "2025-02-10 00:01:00"  # Default value
-
-    date_premiere_observation = st.text_input(
-        "Date de la première observation (format: YYYY-MM-DD HH:MM:SS)",
-        value=st.session_state.date_premiere_observation,
-        help="Entrez une date au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'."
-    )
-
-    # Validate the date format and update session state
-    try:
-        pd.to_datetime(date_premiere_observation, format="%Y-%m-%d %H:%M:%S")
-        st.session_state.date_premiere_observation = date_premiere_observation
-    except ValueError:
-        st.error("Erreur: La date doit être au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'.")
-        return
-
-    st.write("Veuillez entrer les données pour les ", taille_fenetre_observee, " dernières secondes:")
-
+ 
+    st.markdown("#### Données pour l'entrainement du modèle")   # ajout Claire
     # Espace de dépôt des données d'entraînement
     uploaded_file = st.file_uploader("Déposez vos fichiers d'entraînement du modèle ici :", type=["csv", "txt"])
 
@@ -81,11 +63,34 @@ def show():
     else:
         # Jeu de données par défaut afin de pouvoir effectuer des tests
         input_data = pd.read_csv(path_donnees_raw + "donnees_par_defaut/raw_train.csv")
-        st.write(f"Format des données d'entrée par défaut - Nombre de lignes: {input_data.shape[0]:,}, Nombre de colonnes: {input_data.shape[1]}")
-        st.write("Apperçu des données d'entrée par défaut:", input_data.head())
+        st.write(f"Format des données d'entrée pour l'entrainement par défaut - Nombre de lignes: {input_data.shape[0]:,}, Nombre de colonnes: {input_data.shape[1]}")
+        st.write("Apperçu des données d'entrée pour l'entrainement par défaut:", input_data.head())
+   # Date de la première observation dans la série des temps observés
+    if "date_premiere_observation" not in st.session_state:
+        st.session_state.date_premiere_observation = "2025-02-10 00:01:00"  # Default value
+
+    st.markdown("#### Données pour la prédiction") # ajout Claire
+    date_premiere_observation = st.text_input(
+        "Date de la première observation (format: YYYY-MM-DD HH:MM:SS)",
+        value=st.session_state.date_premiere_observation,
+        help="Entrez une date au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'."
+    )
+
+    # Validate the date format and update session state
+    try:
+        pd.to_datetime(date_premiere_observation, format="%Y-%m-%d %H:%M:%S")
+        st.session_state.date_premiere_observation = date_premiere_observation
+    except ValueError:
+        st.error("Erreur: La date doit être au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'.")
+        return
+    
+    
+
+    st.write("Veuillez entrer les données pour les ", taille_fenetre_observee, " dernières secondes:")
 
     # Espace de dépôt des données de prédiction
-    uploaded_file_2 = st.file_uploader("Déposez vos fichiers de prédiction ici :", type=["csv", "txt"])
+    #uploaded_file_2 = st.file_uploader("Déposez vos fichiers de prédiction ici :", type=["csv", "txt"])
+    uploaded_file_2 = st.file_uploader("Déposez vos fichiers pour effectuer la prédiction ici :", type=["csv", "txt"]) #modif Claie
 
     # Lecture et affichage des données de prédiction
     if uploaded_file_2 is not None:
@@ -106,7 +111,7 @@ def show():
         prediction_data = pd.read_csv(preprocessing_dir + "donnees_par_defaut/x_valid_s" + str(sliding_window_valid) + "_o" + str(taille_fenetre_observee) + "_p" + str(st.session_state.horizon_predictions) + "-1.csv", header=None)
         st.write(f"Format des données d'entrée par défaut pour la prédiction - Nombre de lignes: {prediction_data.shape[0]:,}, Nombre de colonnes: {prediction_data.shape[1]}")
         st.write("Apperçu des données d'entrée par défaut pour la prédiction:", prediction_data)
-    """
+    
     # Bouton pour valider les données
     if st.button("Valider"):
         if input_data is not None and prediction_data is not None:

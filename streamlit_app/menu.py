@@ -103,8 +103,8 @@ def display_menu():
     else:
         # Cas par défaut : afficher uniquement "Accueil"
         st.sidebar.markdown("""---""")
-        st.sidebar.write("**session_state pour debug :**")
-        st.sidebar.write(st.session_state)
+        #st.sidebar.write("**session_state pour debug :**")
+        #st.sidebar.write(st.session_state)
     
     st.sidebar.markdown("""---""")
 
@@ -158,5 +158,5 @@ def display_menu():
 
     
     st.sidebar.markdown("""---""")
-    st.sidebar.write("**session_state pour debug :**")
-    st.sidebar.write(st.session_state)
+    #st.sidebar.write("**session_state pour debug :**")
+    #st.sidebar.write(st.session_state)

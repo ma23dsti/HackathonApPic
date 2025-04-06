@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 import os
 from dependency_manager import check_dependencies
+from utilitaires.mise_page import afficher_bandeau_titre
 
 # Importer les fonctions utiles
 from utilitaires.Entrainement import entrainer_le_modèle
@@ -31,6 +32,7 @@ def show():
     Returns:
     None
     """
+    afficher_bandeau_titre()
     st.title("Entraînement du Modèle")
 
     check_dependencies("Entraînement du Modèle")
