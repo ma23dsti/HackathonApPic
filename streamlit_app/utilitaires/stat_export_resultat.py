@@ -9,25 +9,21 @@ from reportlab.lib.utils import ImageReader
 
 def generer_csv(resultat_df, kpi_df, export_csv, export_prediction, export_kpi):
     """
-    Génère les fichiers CSV à partir des DataFrames fournis selon les options d'export.
+    Génère les fichiers CSV à partir des DataFrames de prévision et de KPI, 
+    selon les options d’exportation choisies par l’utilisateur.
 
     Paramètres :
-    ----------
-    resultat_df : pd.DataFrame
-        Données de prévision à exporter.
-    kpi_df : pd.DataFrame
-        Données de métriques à exporter.
-    export_csv : bool
-        Indique si le format CSV est sélectionné.
-    export_prediction : bool
-        Indique si les données de prévision doivent être exportées.
-    export_kpi : bool
-        Indique si les données de KPI doivent être exportées.
+        resultat_df (pd.DataFrame) : Données de prévision à exporter au format CSV.
+        kpi_df (pd.DataFrame) : Données de métriques (KPI) à exporter au format CSV.
+        export_csv (bool) : Indique si l'utilisateur a sélectionné le format CSV.
+        export_prediction (bool) : Indique si les données de prévision doivent être incluses.
+        export_kpi (bool) : Indique si les données de métriques doivent être incluses.
 
-    Retour :
-    -------
-    dict :
-        Dictionnaire avec les noms de fichiers CSV comme clés et le contenu encodé en bytes comme valeurs.
+    Résultat retourné :
+        - dict : Dictionnaire contenant :
+            - les noms des fichiers CSV en tant que clés (ex. "export_predictions.csv"),
+            - le contenu encodé en bytes comme valeurs.
+            Si aucune exportation n’est activée, le dictionnaire est vide.
     """
     fichiers_csv = {}
 
@@ -42,21 +38,17 @@ def generer_csv(resultat_df, kpi_df, export_csv, export_prediction, export_kpi):
 
 def generer_images(fig, tab):
     """
-    Génère les images PNG du graphique principal et du tableau des métriques,
-    et les stocke dans des buffers mémoire.
+    Génère les images PNG à partir du graphique principal (`fig`) et du tableau des métriques (`tab`),
+    en les convertissant en buffers mémoire utilisables pour les exports (PNG ou PDF).
 
     Paramètres :
-    ----------
-    fig : plotly.graph_objects.Figure
-        Graphique à exporter.
-    tab : plotly.graph_objects.Figure
-        Tableau des métriques à exporter.
+        fig (plotly.graph_objects.Figure) : Graphique des prévisions à exporter.
+        tab (plotly.graph_objects.Figure) : Tableau des métriques à exporter.
 
-    Retour :
-    -------
-    tuple :
-        - fig_buffer : io.BytesIO contenant l’image PNG du graphique.
-        - tab_buffer : io.BytesIO contenant l’image PNG du tableau.
+    Résultat retourné :
+        - tuple :
+            - fig_buffer (io.BytesIO) : Image PNG du graphique stockée en mémoire.
+            - tab_buffer (io.BytesIO) : Image PNG du tableau stockée en mémoire.
     """
     # Mise à jour de la taille et des marges du graphique pour éviter qu'il soit tronqué
     fig.update_layout(width=1000, height=600, margin=dict(l=80, r=20, t=20, b=80))
@@ -75,26 +67,23 @@ def generer_images(fig, tab):
 
 def generer_png(fig_buffer, tab_buffer, export_png, export_prediction, export_kpi):
     """
-    Génère les fichiers PNG à partir des buffers d’images du graphique et du tableau.
+    Génère les fichiers PNG à partir des buffers mémoire contenant les images
+    du graphique et du tableau, selon les options d’exportation sélectionnées.
 
     Paramètres :
-    ----------
-    fig_buffer : io.BytesIO
-        Buffer contenant l’image PNG du graphique.
-    tab_buffer : io.BytesIO
-        Buffer contenant l’image PNG du tableau des métriques.
-    export_png : bool
-        Indique si le format PNG est sélectionné.
-    export_prediction : bool
-        Indique si les données de prévision doivent être exportées.
-    export_kpi : bool
-        Indique si les données de KPI doivent être exportées.
+        fig_buffer (io.BytesIO) : Image du graphique au format PNG (stockée en mémoire).
+        tab_buffer (io.BytesIO) : Image du tableau des métriques au format PNG (stockée en mémoire).
+        export_png (bool) : Indique si l'utilisateur a sélectionné l'export au format PNG.
+        export_prediction (bool) : Indique si le graphique doit être inclus.
+        export_kpi (bool) : Indique si le tableau des métriques doit être inclus.
 
-    Retour :
-    -------
-    dict :
-        Dictionnaire avec les noms de fichiers PNG comme clés et leur contenu en bytes comme valeurs.
+    Résultat retourné :
+        - dict : Dictionnaire contenant :
+            - les noms des fichiers PNG comme clés ("export_graphique.png"),
+            - le contenu des images encodé en bytes comme valeurs.
+            Si aucune exportation n’est activée, le dictionnaire est vide.
     """
+    
     fichiers_png = {}
 
     if export_png:
@@ -108,28 +97,27 @@ def generer_png(fig_buffer, tab_buffer, export_png, export_prediction, export_kp
 
 def generer_pdf(fig_buffer, tab_buffer, export_pdf, export_prediction, export_kpi, titre_graphe):
     """
-    Crée un rapport PDF contenant le graphique et le tableau des métriques selon les options sélectionnées.
+    Génère un rapport PDF contenant le graphique et le tableau des métriques, 
+    selon les options d’exportation sélectionnées.
+
+    Le fichier PDF est créé entièrement en mémoire, avec insertion des images (graphique + tableau),
+    et gestion des erreurs d’insertion si nécessaire.
 
     Paramètres :
-    ----------
-    fig_buffer : io.BytesIO
-        Buffer contenant l’image PNG du graphique.
-    tab_buffer : io.BytesIO
-        Buffer contenant l’image PNG du tableau.
-    export_pdf : bool
-        Indique si le format PDF est sélectionné.
-    export_prediction : bool
-        Indique si le graphique doit être inclus dans le PDF.
-    export_kpi : bool
-        Indique si le tableau des métriques doit être inclus dans le PDF.
-    titre_graphe : str
-        Titre du graphique à afficher dans le rapport.
+        fig_buffer (io.BytesIO) : Buffer contenant l’image PNG du graphique.
+        tab_buffer (io.BytesIO) : Buffer contenant l’image PNG du tableau des métriques.
+        export_pdf (bool) : Indique si l'utilisateur a sélectionné l'export au format PDF.
+        export_prediction (bool) : Indique si le graphique doit être intégré au PDF.
+        export_kpi (bool) : Indique si le tableau des métriques doit être intégré au PDF.
+        titre_graphe (str) : Titre principal à afficher dans le rapport PDF.- plus utilisé
 
-    Retour :
-    -------
-    bytes :
-        Contenu du fichier PDF en mémoire (ou None si non généré).
+    Résultat retourné :
+        - bytes : Contenu binaire du fichier PDF généré (ou None si `export_pdf` est désactivé).
+    
+    Exceptions gérées :
+        - En cas d'erreur d'insertion des images, un message d'erreur est ajouté au PDF.
     """
+
     if not export_pdf:
         return None
 
@@ -138,15 +126,15 @@ def generer_pdf(fig_buffer, tab_buffer, export_pdf, export_prediction, export_kp
 
     # Titre principal
     pdf_rapport.setFont("Helvetica-Bold", size=14)
-    pdf_rapport.setFillColorRGB(0, 0, 1)
+    pdf_rapport.setFillColorRGB(37/255, 41/255, 96/255)
     pdf_rapport.drawString(220, 800, "Export des résultats")
     y_position = 740
 
     # Insertion du graphique
     if export_prediction:
         pdf_rapport.setFont("Helvetica", 12)
-        pdf_rapport.setFillColorRGB(0, 0, 1)
-        pdf_rapport.drawString(100, y_position, titre_graphe)
+        pdf_rapport.setFillColorRGB(24/255, 112/255, 184/255)
+        pdf_rapport.drawString(100, y_position, "Graphique de prédiction des différents modèles obtenus")
         y_position -= 20
 
         try:
@@ -164,7 +152,7 @@ def generer_pdf(fig_buffer, tab_buffer, export_pdf, export_prediction, export_kp
     if export_kpi:
         y_position -= 20
         pdf_rapport.setFont("Helvetica", 12)
-        pdf_rapport.setFillColorRGB(0, 0, 1)
+        pdf_rapport.setFillColorRGB(24/255, 112/255, 184/255)
         pdf_rapport.drawString(100, y_position, "Rappel des métriques")
         y_position -= 10
 
@@ -185,19 +173,19 @@ def generer_pdf(fig_buffer, tab_buffer, export_pdf, export_prediction, export_kp
 
 def creer_zip(fichiers_a_exporter, zip_file_path):
     """
-    Crée un fichier ZIP contenant tous les fichiers spécifiés.
+    Crée un fichier ZIP contenant les fichiers à exporter (CSV, PNG, PDF, etc.),
+    à partir d’un dictionnaire {nom_fichier: contenu}.
+
+    Les fichiers sont compressés et stockés à l’emplacement zip_file_path.
 
     Paramètres :
-    ----------
-    fichiers_a_exporter : dict
-        Dictionnaire avec noms de fichiers comme clés et contenu en bytes comme valeurs.
-    zip_file_path : str
-        Chemin complet où le fichier ZIP sera créé.
+        fichiers_a_exporter (dict) : Dictionnaire contenant :
+            - les noms de fichiers comme clés (str),
+            - leur contenu binaire (bytes) comme valeurs.
+        zip_file_path (str) : Chemin complet du fichier ZIP à créer.
 
-    Retour :
-    -------
-    str :
-        Chemin du fichier ZIP généré.
+    Résultat retourné :
+        - str : Chemin du fichier ZIP généré.
     """
     with zipfile.ZipFile(zip_file_path, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for filename, content in fichiers_a_exporter.items():
@@ -208,35 +196,31 @@ def creer_zip(fichiers_a_exporter, zip_file_path):
 
 def export_data_zip(resultat_df, kpi_df, export_options, fig, tab, titre_graphe, zip_file_path):
     """
-    Exporte les données sélectionnées (prévisions, KPI, graphique, tableau) dans un fichier ZIP.
+    Exporte l’ensemble des éléments sélectionnés (données, graphique, tableau) 
+    dans un fichier ZIP, selon les options définies par l’utilisateur.
 
-    En fonction des options cochées par l'utilisateur (`export_options`), cette fonction :
-    - Génère les fichiers CSV des données de prévision et des métriques (KPI).
-    - Convertit le graphique (`fig`) en image PNG.
-    - Crée un rapport PDF contenant le graphique et le tableau des métriques (`tab`).
-    - Regroupe tous les fichiers dans un fichier ZIP temporaire à l'emplacement spécifié (`zip_file_path`).
+    Cette fonction orchestre l’ensemble du processus en fonction des sélections:
+    - Génération des fichiers  CSV des prédictions et métrique,
+    - Génération des images PNG du graphique et du tableau,
+    - Création d’un rapport PDF contenant les visuels,
+    - Compression de tous les fichiers dans un ZIP.
 
     Paramètres :
-    ----------
-    resultat_df : pd.DataFrame
-        Données de prévision à exporter.
-    kpi_df : pd.DataFrame
-        Données de métriques à exporter.
-    export_options : dict
-        Dictionnaire contenant les choix de formats et types de données à exporter.
-    fig : matplotlib.figure.Figure ou plotly.graph_objects.Figure
-        Graphique à exporter.
-    tab : plotly.graph_objects.Figure
-        Tableau des métriques à inclure dans le PDF.
-    titre_graphe : str
-        Titre à afficher dans le rapport PDF.
-    zip_file_path : str
-        Chemin complet où le fichier ZIP sera temporairement enregistré.
+        resultat_df (pd.DataFrame) : Données de prévision à exporter.
+        kpi_df (pd.DataFrame) : Données de métriques (KPI) à exporter.
+        export_options (dict) : Dictionnaire contenant les options d’export sélectionnées :
+            - export_options["formats"]["export_format_csv"] : bool
+            - export_options["formats"]["export_format_png"] : bool
+            - export_options["formats"]["export_format_pdf"] : bool
+            - export_options["donnees"]["export_prediction"] : bool
+            - export_options["donnees"]["export_kpi"] : bool
+        fig (plotly.graph_objects.Figure) : Graphique à inclure dans le PNG et PDF.
+        tab (plotly.graph_objects.Figure) : Tableau des métriques à inclure dans le PNG et PDF.
+        titre_graphe (str) : Titre affiché dans le rapport PDF.
+        zip_file_path (str) : Chemin du fichier ZIP à créer.
 
-    Retour :
-    -------
-    str :
-        Le chemin du fichier ZIP généré.
+    Résultat retourné :
+        - str : Chemin du fichier ZIP généré contenant tous les fichiers sélectionnés.
     """
     # Stockage des options dans variables locales
     export_csv = export_options["formats"]["export_format_csv"]
@@ -273,9 +257,25 @@ def export_data_zip(resultat_df, kpi_df, export_options, fig, tab, titre_graphe,
 def gerer_export(df_final_selection, df_kpi_selection, export_options, fig, tab, titre_graphe):
    
     """
-    Gère la génération du fichier ZIP en fonction des options sélectionnées.
-    Appelle la fonction export_data_zip pour créer le fichier zip temporaire
-    Met à jour st.session_state['zip_ready'] et ['zip_path'].
+    Gère le processus global d'exportation en ZIP à partir des données filtrées 
+    et des options sélectionnées par l'utilisateur via l'interface Streamlit.
+
+    Cette fonction :
+    - Crée un fichier ZIP temporaire contenant les fichiers souhaités (CSV, PNG, PDF),
+    - Met à jour l'état de Streamlit (`st.session_state`) pour indiquer que l'export est prêt.
+
+    Paramètres :
+        df_final_selection (pd.DataFrame) : Données filtrées à exporter (prévisions).
+        df_kpi_selection (pd.DataFrame) : Métriques KPI filtrées à exporter.
+        export_options (dict) : Dictionnaire contenant les options d’exportation choisies.
+        fig (plotly.graph_objects.Figure) : Graphique à intégrer dans les exports.
+        tab (plotly.graph_objects.Figure) : Tableau des métriques à intégrer dans les exports.
+        titre_graphe (str) : Titre à afficher dans le rapport PDF.
+
+    Effets secondaires :
+        - Met à jour :
+            - `st.session_state.zip_ready` : booléen indiquant si le ZIP est prêt.
+            - `st.session_state.zip_path` : chemin du fichier ZIP généré.
     """
     st.session_state.zip_ready = False
     with st.spinner("⏳ Préparation du fichier ZIP en cours... Veuillez patienter."):
