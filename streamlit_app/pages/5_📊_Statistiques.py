@@ -19,6 +19,22 @@ import pandas as pd
 display_menu()
 
 def show():
+    """
+    Affiche la page Statistiques de la plateforme de prédiction de trafic réseau.
+
+    Cette fonction :
+    - Charge les données du fichier JSON (données d’entrée, prédictions, KPI),
+    - Extrait et fusionne les données nécessaires à l’affichage,
+    - Met en forme les paramètres sélectionnables (type de temps, unité, modèles à afficher),
+    - Met à jour dynamiquement le graphique et le tableau des métriques en fonction des choix utilisateur,
+    - Propose un système d’export multi-format (CSV, PNG, PDF) regroupé dans un fichier ZIP.
+
+    Paramètres :
+        Aucun
+
+    Résultat retourné :
+        Aucun
+    """
     afficher_bandeau_titre()
     st.title("Statistiques")
 
@@ -119,8 +135,11 @@ def show():
     # Création titre et label des axes suite à la sélection des parametres
     titre_graphe, label_x, label_y=selection_titre(selection_options, choix_temps, liste_unite, choix_unite)
     
+    # Ajouter une séparation
+    st.markdown("---")
 
-    add_vertical_space(2) # ajout espace
+    add_vertical_space(1) # ajout espace
+
     st.markdown("#### 📈 Affichage des Résultats")
 
     # Mise en page en deux colonnes
@@ -141,8 +160,11 @@ def show():
         #st.pyplot(fig)
         #st.markdown("<div style='margin-top: -50px;'></div>", unsafe_allow_html=True)
         
-
+    #ajoute un espace
     add_vertical_space(2)
+
+    # Ajouter une séparation
+    st.markdown("---")
 
     # Export des données selectionnées
     st.markdown("#### 📦 Sélection des paramètres d'export")

@@ -101,7 +101,22 @@ def show():
         st.error("Erreur: La date doit être au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'.")
         return
 
-    st.write("Veuillez entrer les données pour les ", taille_fenetre_observee, " dernières secondes:")
+    #st.write("Veuillez entrer les données pour les ", taille_fenetre_observee, " dernières secondes:")
+    st.write(f"Veuillez entrer les données pour les {taille_fenetre_observee} dernières secondes:")
+
+    # Mise en forme et message de rappel sur le format attendu des données
+    st.markdown(
+    f"""
+    <div style="background-color:#f5f5f5; padding:10px; border-radius:5px;border: 2px solid orange;">
+        <em style="color:#333333; font-size:14px;">
+        ⚠️ Attention :<br>
+        Le format attendu pour ce fichier est <strong>une ligne unique</strong> contennant <strong>{taille_fenetre_observee} observations</strong> afin de faire la prédiction.<br>
+        Si vous importez un fichier ne respectant pas ce format, des erreurs peuvent survenir.<br>
+        </em>
+    </div>
+    """,
+    unsafe_allow_html=True
+    )
 
     # Espace de dépôt des données de prédiction
     uploaded_file_2 = st.file_uploader("Déposez vos fichiers de prédiction ici :", type=["csv", "txt"])
@@ -123,8 +138,8 @@ def show():
     else:
         # Jeu de données de test par défaut afin de pouvoir effectuer des tests
         prediction_data = pd.read_csv(preprocessing_dir + "donnees_par_defaut/x_valid_s" + str(sliding_window_valid) + "_o" + str(taille_fenetre_observee) + "_p" + str(st.session_state.horizon_predictions) + "-1.csv", header=None)
-        st.write(f"Format des données d'entrée par défaut pour la prédiction - Nombre de lignes: {prediction_data.shape[0]:,}, Nombre de colonnes: {prediction_data.shape[1]}")
-        st.write("Apperçu des données d'entrée par défaut pour la prédiction:", prediction_data)
+        #st.write(f"Format des données d'entrée par défaut pour la prédiction - Nombre de lignes: {prediction_data.shape[0]:,}, Nombre de colonnes: {prediction_data.shape[1]}")
+        #st.write("Apperçu des données d'entrée par défaut pour la prédiction:", prediction_data)
 
     # Bouton pour valider les données
     if st.button("Valider"):

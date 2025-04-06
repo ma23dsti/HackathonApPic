@@ -180,8 +180,8 @@ if __name__ == "__main__":
         if st.session_state.choix_modele is None:
             st.sidebar.page_link("1_🏠_Accueil.py", label="Accueil", icon="🏠")
             st.sidebar.markdown("""---""")
-            st.sidebar.write("**session_state pour debug :**")
-            st.sidebar.write(st.session_state)
+            #st.sidebar.write("**session_state pour debug :**")
+            #st.sidebar.write(st.session_state)
         else:
             display_menu()
     show()

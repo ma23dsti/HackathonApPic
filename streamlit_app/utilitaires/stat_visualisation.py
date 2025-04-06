@@ -8,34 +8,25 @@ import plotly.graph_objects as go
 palette_defaut = px.colors.qualitative.Plotly 
 
 palette_daltonien=[
-    "rgb(57,75,154)",
+                    "rgb(152,202,225)",
+                    "rgb(37,42,184)",
+                     "rgb(204,76,2)",
+                    "rgb(102,37,6)",
                     "rgb(74,123,183)",
-                      "rgb(110,166,205)",
-                      "rgb(152,202,225)",
-                      "rgb(230,85,13)",
-                   #"rgb(221,61,45)",
-                   #"rgb(165,0,38)",
-                 "rgb(240,173,50)",
-                   
-                   "rgb(254,218,139)",
-                     "rgb(192,228,239)",
-                   "rgb(253,279,201)",
-                 
-                   "rgb(234,236,204)",
-                   
-                   "rgb(254,196,79)", 
-                   "rgb(251,154,41)",
-                   "rgb(236,112,20)",
-                   "rgb(204,76,2)",
                    "rgb(153,52,4)",
-                   "rgb(102,37,6)"
+                  "rgb(236,112,20)",
+                     "rgb(110,166,205)",
+                      "rgb(240,173,50)",
+                  "rgb(251,154,41)",
+                 "rgb(57,75,154)",
+                    "rgb(230,85,13)"
                   ]
 
 
 # Définition des styles de lignes et des épaisseurs
 
 ligne_styles =['solid', 'dot', 'dash', 'longdash', 'dashdot', 'longdashdot']
-ligne_epaisseur = [1.5, 2.5, 3.5]  
+ligne_epaisseur = [2, 3, 3.5]  
 
 
 def creation_graphique(df_data, palette, id_modele, var_id, var_x, var_y, label_x, label_y):
@@ -143,7 +134,7 @@ def creation_tableau (df_kpi_selection):
     # style commun
     style_header = dict(
         fill_color='white',  # Fond blanc
-        font=dict(color='blue', size=12),  # Texte bleu
+        font=dict(color='rgb(24,112,184)', size=12), 
         align='left',
         height=30,
         line=dict(color='black', width=2)

@@ -233,8 +233,8 @@ def show():
         plt.legend()
         st.pyplot(plt)
 
-    st.write("### Prédictions générées:")
-    st.write(st.session_state.predictions_df)
+        st.write("### Prédictions générées:")
+        st.write(st.session_state.predictions_df)
 
     # Ajouter une séparation
     st.markdown("---")
