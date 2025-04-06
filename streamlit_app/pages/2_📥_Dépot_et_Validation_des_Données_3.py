@@ -37,28 +37,14 @@ def show():
     Returns:
     None
     """
-    
+    afficher_bandeau_titre()
     st.title("Dépot et Validation des Données")
 
     check_dependencies("Dépot et Validation des Données")
 
-    # Date de la première observation dans la série des temps observés
-    if "date_premiere_observation" not in st.session_state:
-        st.session_state.date_premiere_observation = "2025-02-10 00:01:00"  # Default value
+    st.markdown("#### Modèle pour la prédiction")   # ajout Claire
 
-    date_premiere_observation = st.text_input(
-        "Date de la première observation (format: YYYY-MM-DD HH:MM:SS)",
-        value=st.session_state.date_premiere_observation,
-        help="Entrez une date au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'."
-    )
-
-    # Validate the date format and update session state
-    try:
-        pd.to_datetime(date_premiere_observation, format="%Y-%m-%d %H:%M:%S")
-        st.session_state.date_premiere_observation = date_premiere_observation
-    except ValueError:
-        st.error("Erreur: La date doit être au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'.")
-        return
+    
 
         # Field to select a folder (mandatory)
     if "model_charge" not in st.session_state:
@@ -93,6 +79,27 @@ def show():
 
     if st.session_state.get('model_charge'):
         st.write(f"Modèle chargé depuis : {st.session_state.model_charge}")
+
+
+    st.markdown("#### Données pour la prédiction") # ajout Claire    
+
+    # Date de la première observation dans la série des temps observés
+    if "date_premiere_observation" not in st.session_state:
+        st.session_state.date_premiere_observation = "2025-02-10 00:01:00"  # Default value
+
+    date_premiere_observation = st.text_input(
+        "Date de la première observation (format: YYYY-MM-DD HH:MM:SS)",
+        value=st.session_state.date_premiere_observation,
+        help="Entrez une date au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'."
+    )
+
+    # Validate the date format and update session state
+    try:
+        pd.to_datetime(date_premiere_observation, format="%Y-%m-%d %H:%M:%S")
+        st.session_state.date_premiere_observation = date_premiere_observation
+    except ValueError:
+        st.error("Erreur: La date doit être au format 'YYYY-MM-DD HH:MM:SS'. Exemple: '2025-02-10 00:01:00'.")
+        return
 
     st.write("Veuillez entrer les données pour les ", taille_fenetre_observee, " dernières secondes:")
 
