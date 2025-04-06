@@ -156,5 +156,5 @@ def display_menu():
 
     
     st.sidebar.markdown("""---""")
-    st.sidebar.write("**session_state pour debug :**")
-    st.sidebar.write(st.session_state)
+    #st.sidebar.write("**session_state pour debug :**")
+    #st.sidebar.write(st.session_state)
