@@ -39,6 +39,8 @@ def show():
     # Reset model_charge when on the home page
     if "model_charge" in st.session_state:
         st.session_state.model_charge = None
+    # Set the on_homepage flag to reset the training plot
+    st.session_state["on_homepage"] = True
 
     # Question pour l'utilisateur
     choix_modele_options = {
