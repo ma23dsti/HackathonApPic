@@ -7,6 +7,7 @@ import streamlit as st
 import numpy as np
 import random
 import shutil
+import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -29,31 +30,72 @@ class TrainingMonitorNotebook:
     def __init__(self):
         self.train_loss = []
         self.val_loss = []
+        self.cumulative_epochs = []  # Store cumulative epoch numbers
+        self.session_start_indices = []  # Track where each session starts
 
     def update_plot(self, epoch, train_loss, val_loss):
+        # Append the current epoch number and losses
+        if len(self.cumulative_epochs) > 0 and epoch == 0:
+            # Add NaN to break the line between sessions
+            self.cumulative_epochs.append(np.nan)
+            self.train_loss.append(np.nan)
+            self.val_loss.append(np.nan)
+            self.session_start_indices.append(len(self.cumulative_epochs))  # Mark the start of a new session
+
+        self.cumulative_epochs.append(len(self.cumulative_epochs) + 1)
         self.train_loss.append(train_loss)
         self.val_loss.append(val_loss)
 
-        #clear_output(wait=True)
+    def generate_labels(self):
+        # Determine spacing based on cumulative epoch count
+        total_epochs = len(self.cumulative_epochs)
+        if total_epochs > 500:
+            spacing = 50
+        elif total_epochs > 400:
+            spacing = 40
+        elif total_epochs > 300:
+            spacing = 30
+        elif total_epochs > 200:
+            spacing = 20
+        elif total_epochs > 100:
+            spacing = 10
+        elif total_epochs > 25:
+            spacing = 5
+        else:
+            spacing = 1
 
-        plt.figure(figsize=(5, 3))  # Adjust size to occupy half of the window
-        train_line, = plt.plot(self.train_loss, label="Training Loss", color='blue')
-        val_line, = plt.plot(self.val_loss, label="Validation Loss", color='orange')
-        plt.xlabel("Epochs", fontsize=6)
-        plt.ylabel("Loss", fontsize=6)
-        plt.title("Training and Validation Loss Over Epochs", fontsize=6)
-        plt.legend(fontsize=6)
-        plt.xticks(fontsize=6)
-        plt.yticks(fontsize=6)
-        plt.grid(True)
-        plt.show()
+        # Generate non-cumulative labels for each session
+        labels = [""] * len(self.cumulative_epochs)
+        for i, start_idx in enumerate(self.session_start_indices + [len(self.cumulative_epochs)]):
+            if i == 0:
+                session_start = 0
+            else:
+                session_start = self.session_start_indices[i - 1]
+
+            for j in range(session_start, start_idx):
+                non_cumulative_epoch = j - session_start + 1
+                if non_cumulative_epoch % spacing == 0:
+                    labels[j] = str(non_cumulative_epoch)
+        return labels
+
+    def reset_plot(self):
+        self.train_loss = []
+        self.val_loss = []
+        self.cumulative_epochs = []
+        self.session_start_indices = []
 
 # Instantiate the monitor
 training_monitor_notebook = TrainingMonitorNotebook()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
 def entrainer_le_modèle(dossier_donnees):
+    st.write(st.session_state.on_homepage)
+    # Reset the training plot when navigating to the homepage
+    if st.session_state.on_homepage:
+        training_monitor_notebook.reset_plot()
+        st.session_state["on_homepage"] = False  # Reset the flag after clearing the plot
 
     # Tailles nécessaires pour l'entrainement'
     horizon = st.session_state.horizon_predictions
@@ -62,7 +104,7 @@ def entrainer_le_modèle(dossier_donnees):
     sliding_window_valid = st.session_state.sliding_window_valid
 
     # Dossier du modèle par défaut
-    dossier_modele_par_defaut = f"streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_o{taille_fenetre_observee}_p{horizon}/"
+    dossier_modele_par_defaut = f"streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_restreint_o{taille_fenetre_observee}_p{horizon}/"
     # Récupérer les fichiers du modèle par défaut à utiliser pour l'entrainement
     fichiers_modele = ["modele.pth", "modele_parametres.json", "x_scaler.pkl", "y_scaler.pkl"]
     dossier_modele_courant = "streamlit_app/static/modeles/modele_courant/"
@@ -93,7 +135,22 @@ def entrainer_le_modèle(dossier_donnees):
                 st.session_state.baseline_nrmse = params.get("kpi", {}).get("nrmse", None)
         except FileNotFoundError:
             st.session_state.baseline_nrmse = 0.15  # Valeur par défaut si le fichier n'est pas trouvé
-            st.write("Le fichier modele_parametres.json est introuvable.")
+            # Nombre maximum de tentatives
+            max_retries = 3
+            retry_interval = 2  # secondes entre chaque tentative
+            # Tentatives de lecture après la copie du fichier
+            for attempt in range(max_retries):
+                if os.path.exists(dossier_modele_courant + "modele_parametres.json"):  # Vérifie si le fichier existe
+                    st.write("Le fichier modele_parametres.json a été trouvé !")
+                    # Code pour charger ou traiter le fichier ici
+                    break
+                else:
+                    # Si le fichier n'est pas trouvé, afficher un message et attendre avant de réessayer
+                    st.write(f"Tentative {attempt + 1} : Le fichier modele_parametres.json est introuvable.")
+                    if attempt < max_retries - 1:  # Si ce n'est pas la dernière tentative
+                        time.sleep(retry_interval)  # Attendre avant la prochaine tentative
+                    else:
+                        st.write("Le fichier n'a pas pu être trouvé après plusieurs tentatives.")
         except json.JSONDecodeError:
             st.session_state.baseline_nrmse = 0.15 # Valeur par défaut si le fichier n'est pas trouvé
             st.write("Erreur lors du chargement du fichier modele_parametres.json.")
@@ -200,6 +257,11 @@ def entrainer_le_modèle(dossier_donnees):
         progress_text = st.empty()  # Placeholder for progress text
         kpi_placeholder = st.empty()  # Placeholder for KPI display
 
+        # Display files used for training outside the loop
+        progress_text.write(
+            f"Fichiers utilisés: {nom_fichier_x_train}, {nom_fichier_y_train}, {nom_fichier_x_valid}, {nom_fichier_y_valid}"
+        )
+
         for epoch in range(epochs):
             # Shuffle les données d'entrainement après chaque epoch.
             # Le shuffling est effectué entre portions de série temporelle pour un meilleur apprentissage,
@@ -245,19 +307,37 @@ def entrainer_le_modèle(dossier_donnees):
             # Mettre à jour en live le graphique des métriques
             training_monitor_notebook.update_plot(epoch, avg_train_loss, val_loss)
 
-            # Afficher le graph des métriques
-            with plot_placeholder.container():
-                plt.figure(figsize=(4, 2))
-                plt.plot(training_monitor_notebook.train_loss, label="Training Loss", color='blue')
-                plt.plot(training_monitor_notebook.val_loss, label="Validation Loss", color='orange')
-                plt.xlabel("Epochs", fontsize=5)
-                plt.ylabel("Loss", fontsize=5)
-                plt.title("Training and Validation Loss par Epoch", fontsize=5)
-                plt.legend(fontsize=5)
-                plt.xticks(fontsize=5)
-                plt.yticks(fontsize=5)
-                plt.grid(True)
-                st.pyplot(plt)
+        # Afficher le graph des métriques with filtered x-axis labels
+        with plot_placeholder.container():
+            plt.figure(figsize=(4, 2))
+            plt.plot(
+                training_monitor_notebook.cumulative_epochs,
+                training_monitor_notebook.train_loss,
+                label="Training Loss",
+                color='blue'
+            )
+            plt.plot(
+                training_monitor_notebook.cumulative_epochs,
+                training_monitor_notebook.val_loss,
+                label="Validation Loss",
+                color='orange'
+            )
+            plt.xlabel("Epochs", fontsize=5)
+            plt.ylabel("Loss", fontsize=5)
+            plt.title("Training and Validation Loss per Epoch", fontsize=5)
+            plt.legend(fontsize=5)
+
+            # Generate x-axis labels
+            labels = training_monitor_notebook.generate_labels()
+
+            plt.xticks(
+                ticks=range(1, len(training_monitor_notebook.cumulative_epochs) + 1),
+                labels=labels,
+                fontsize=5
+            )
+            plt.yticks(fontsize=5)
+            plt.grid(True)
+            st.pyplot(plt)
 
         # Validation KPI
         model.eval()
