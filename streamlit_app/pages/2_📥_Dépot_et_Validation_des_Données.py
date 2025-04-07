@@ -104,7 +104,7 @@ def show():
 
                 if st.session_state.premiere_prediction_seule:
                     # Dossier du modèle par défaut
-                    dossier_modele_par_defaut = f"streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_restreint_o{taille_fenetre_observee}_p{horizon}/"
+                    dossier_modele_par_defaut = f"streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_o{taille_fenetre_observee}_p{horizon}/"
                     fichiers_modele = ["modele.pth", "modele_parametres.json", "x_scaler.pkl", "y_scaler.pkl"]
                     dossier_modele_courant = "streamlit_app/static/modeles/modele_courant/"
                     # Créer le dossier du modèle courant s'il n'existe pas.

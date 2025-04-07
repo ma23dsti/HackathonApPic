@@ -69,7 +69,7 @@ def show():
 
     # Set default model path if no folder is entered and no value is stored
     if not st.session_state.get('model_charge'):
-        default_model_path = "streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_restreint_o60_p5/"
+        default_model_path = "streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_o60_p5/"
         if os.path.isdir(default_model_path):
             st.session_state['model_charge'] = default_model_path
             st.info(f"Aucun modèle spécifié. Le modèle par défaut sera utilisé : {default_model_path}")

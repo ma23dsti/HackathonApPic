@@ -91,7 +91,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def entrainer_le_modèle(dossier_donnees):
-    st.write(st.session_state.on_homepage)
     # Reset the training plot when navigating to the homepage
     if st.session_state.on_homepage:
         training_monitor_notebook.reset_plot()
@@ -104,7 +103,7 @@ def entrainer_le_modèle(dossier_donnees):
     sliding_window_valid = st.session_state.sliding_window_valid
 
     # Dossier du modèle par défaut
-    dossier_modele_par_defaut = f"streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_restreint_o{taille_fenetre_observee}_p{horizon}/"
+    dossier_modele_par_defaut = f"streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_o{taille_fenetre_observee}_p{horizon}/"
     # Récupérer les fichiers du modèle par défaut à utiliser pour l'entrainement
     fichiers_modele = ["modele.pth", "modele_parametres.json", "x_scaler.pkl", "y_scaler.pkl"]
     dossier_modele_courant = "streamlit_app/static/modeles/modele_courant/"
@@ -246,7 +245,7 @@ def entrainer_le_modèle(dossier_donnees):
         #st.write(y_valid_standardized)
 
         # Training Parameters
-        epochs = 5
+        epochs = 50
         batch_size = 1024
 
         # Create a Streamlit placeholder for the plot
