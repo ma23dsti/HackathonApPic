@@ -74,10 +74,10 @@ def reprocesser_les_donnees(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=
         df["Time"] = pd.to_datetime(df["Time"], format="%Y-%m-%d %H:%M:%S")
     except Exception:
         raise ValueError("Les données doivent être sous le format YYYY-MM-dd hh:mm:ss")
-
+    
     if not np.issubdtype(df["debit"].dtype, np.integer):
         raise ValueError("Les données doivent être sous forme d'entiers")
-
+    
     print("Agréger les valeurs si plusieurs appartiennent à la même seconde")
     # Agréger les valeurs si plusieurs appartiennent à la même seconde
     df = df.groupby(df["Time"]).agg({"debit": "sum"}).reset_index()
@@ -162,22 +162,24 @@ def reprocesser_les_donnees(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=
     print("Reshape des données")
     print("Sliding windows : ",sliding_window)
     valid_sequences = []
+    time_sequence = []
     size = shape + horizon
     for i in range(0, len(df), sliding_window):
         segment = df.iloc[i : i + size]
         if segment["Check"].sum() == 0:
+            time_sequence.append(segment["Time"].values)
             valid_sequences.append(segment["debit"].values)
-    reprocesser_les_donnees = pd.DataFrame(valid_sequences)
+    preprocess_data = pd.DataFrame(valid_sequences)
 
     # On enleve la derniere ligne si elle n'est pas complète
-    clean_data = reprocesser_les_donnees.dropna()
+    clean_data = preprocess_data.dropna()
 
     X = clean_data.iloc[:, :shape]
     y = clean_data.iloc[:, shape:]
 
     print("Reshape des données terminées")
 
-    return X, y
+    return X, y, time_sequence
 
 
 
@@ -242,6 +244,7 @@ def preprocesser_les_donnees(preprocess_dir : str, df: DataFrame, horizon=5,
     Returns:
     None
     """
+
     # Mapping horizon to shape
     horizon_mapping = {1: 12, 5: 60, 30: 300, 60: 400, 300: 500}
 
@@ -300,10 +303,10 @@ def preprocesser_les_donnees(preprocess_dir : str, df: DataFrame, horizon=5,
     check_similarity(X_train, X_valid)
 
 
-    name_file_x_train = f"{preprocess_dir}x_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
-    name_file_y_train = f"{preprocess_dir}y_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
-    name_file_x_valid = f"{preprocess_dir}x_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
-    name_file_y_valid = f"{preprocess_dir}y_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
+    name_file_x_train = f"{preprocess_dir}_x_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
+    name_file_y_train = f"{preprocess_dir}_y_train_s{sliding_window_train}_o{shape}_p{horizon}.csv"
+    name_file_x_valid = f"{preprocess_dir}_x_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
+    name_file_y_valid = f"{preprocess_dir}_y_valid_s{sliding_window_valid}_o{shape}_p{horizon}.csv"
 
 
     X_train.to_csv(name_file_x_train, index=False,header=False)
