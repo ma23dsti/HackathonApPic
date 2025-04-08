@@ -30,9 +30,9 @@ from sklearn.model_selection import train_test_split
 # Si la colonne Check contient plus de x% de valeur égales à 1 (x étant une données d'entrée par l'utilisateur, compris entre 0 et 1) raise une nouvelle erreur : 'les données ne sont pas aggrégées à la seconde ou contiennent des valeures avec trop d'écart, veuillez essayer un nouveau jeu de données.'
 
 # 6 : Reshape les données :
-# Un paramètre horizon sera en entrée avec 5 valeurs possibles  : 1 seconde, 5 secondes, 10 secondes, 60 secondes ou 300 secondes.
+# Un paramètre horizon sera en entrée avec 5 valeurs possibles  : 1 seconde, 5 secondes, 30 secondes, 60 secondes ou 300 secondes.
 # Un mapping sera définit en amont de la fonction selon chaque valeurs d'horizon une valeur shape sera définit :
-# valeur horizon:shape   1: 12, 5:60, 10:90, 60:120, 300:190.
+# valeur horizon:shape   1: 12, 5:60, 30:300, 60:400, 300:500.
 # Selon la valeur de shape il faudra reshape les données avec la valeur de shape+horizon comme nombre de colonne.
 # Attention il faudra s'assurer que les données reshape au sein d'une même ligne ne contiennent aucune valeur de check égale à 1.
 # Si une valeur check =1 est trouvé, il faudra trouver une oublier cette séquence et trouver une prochaine séquence possible sans aucun check = 1
@@ -47,7 +47,26 @@ from sklearn.model_selection import train_test_split
 
 # Pour check les trou avec purc_valid_jeu , se baser sur les time diff et pas que sur le nombre de check et faire check * time_diff / temps total du dataset 
 
-def repreprocesser_les_donnees(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shape = 60, sliding_window = 65):
+def reprocesser_les_donnees(df, ecart_debit_max=30, purc_valid_jeu=0.4, horizon=5 , shape = 60, sliding_window = 65):
+    """
+    Préprocess les données de débit réseau.
+
+    Cette fonction réalise plusieurs étapes de transformation des données de débit réseau pour les préparer à l'entraînement d'un modèle de prédiction.
+    Les étapes incluent la vérification des types de données, l'agrégation des valeurs, l'imputation des valeurs manquantes, la vérification des écarts, 
+    et le reshape des données selon une fenêtre glissante.
+
+    Parameters:
+    df (DataFrame): DataFrame contenant les données de débit réseau avec les colonnes 'Time' et 'debit'.
+    ecart_debit_max (int): Nombre maximal de secondes d'écart autorisé entre deux valeurs pour l'imputation.
+    purc_valid_jeu (float): Pourcentage maximal de temps manquant autorisé dans le jeu de validation.
+    horizon (int): Horizon de temps pour le reshape des données.
+    shape (int): Taille des séquences reshaped.
+    sliding_window (int): Pas de la fenêtre glissante pour augmenter les données du jeu d'entraînement.
+
+    Returns:
+    X (DataFrame): Données d'entrainement reshaped prêtes pour l'entraînement.
+    y (DataFrame): Données de predict correspondants aux données reshaped.
+    """
 
     print("Vérification et conversion des types")
     # Vérification et conversion des types
@@ -166,9 +185,18 @@ def repreprocesser_les_donnees(df, ecart_debit_max=30, purc_valid_jeu=0.4, horiz
 
 def check_similarity(x_train: pd.DataFrame, x_valid: pd.DataFrame,  threshold: float = 50.0) -> None: 
     """
-    Fonction qui permet de vérifier que x_train et x_valid sont différents 
-    Convertir les DataFrames en ensembles de tuples (pour une comparaison rapide)
+    Vérifie la similarité entre les jeux de données d'entraînement et de validation.
 
+    Cette fonction compare les jeux de données d'entraînement et de validation pour s'assurer qu'ils ne sont pas trop similaires.
+    Si le pourcentage de similarité dépasse un seuil donné, une erreur est levée.
+
+    Parameters:
+    x_train (DataFrame): Jeu de données d'entraînement.
+    x_valid (DataFrame): Jeu de données de validation.
+    threshold (float): Seuil de pourcentage de similarité autorisé. Par défaut à 50%.
+
+    Raises:
+    ValueError: Si le pourcentage de similarité dépasse le seuil.
     """
     train_set = set(map(tuple, x_train.to_numpy()))
     valid_set = set(map(tuple, x_valid.to_numpy()))
@@ -188,12 +216,37 @@ def check_similarity(x_train: pd.DataFrame, x_valid: pd.DataFrame,  threshold: f
 
 
 def preprocesser_les_donnees(preprocess_dir : str, df: DataFrame, horizon=5, 
-    split =0.13269581,  ecart_debit_max=30, 
-    purc_valid_jeu=0.4, 
-    sliding_window_train = 13, sliding_window_valid = 65)-> None:
+        split = 1-2080027/2398267,    #0.13269581: répartition train/test utilisé lors de la phase 1 (2398267 = 2080027 + 318240)
+        ecart_debit_max=30, 
+        purc_valid_jeu=0.4, 
+        sliding_window_train = 13, sliding_window_valid = 65):
+    """
+    Préprocess les données de débit réseau et les sépare en jeux de données d'entraînement et de validation.
+
+    Cette fonction réalise plusieurs étapes de transformation des données de débit réseau, les sépare en jeux de données d'entraînement et de validation,
+    et vérifie leur intégrité. Les étapes incluent la vérification des types de données, l'agrégation des valeurs, l'imputation des valeurs manquantes, 
+    la vérification des écarts, et le reshape des données selon une fenêtre glissante.
+
+    Parameters:
+    preprocess_dir (str): Répertoire de sauvegarde des fichiers préprocessés.
+    df (DataFrame): DataFrame contenant les données de débit réseau avec les colonnes 'Time' et 'debit'.
+    horizon (int): Horizon de temps pour le reshape des données.
+    split (float): Pourcentage de split entre les jeux de données d'entraînement et de validation.
+    ecart_debit_max (int): Nombre maximal de secondes d'écart autorisé entre deux valeurs pour l'imputation.
+    purc_valid_jeu (float): Pourcentage maximal de temps manquant autorisé dans le jeu de validation.
+    sliding_window_train (int): Pas de la fenêtre glissante pour augmenter les données du jeu d'entraînement.
+    sliding_window_valid (int): Pas de la fenêtre glissante pour augmenter les données du jeu de validation.
+
+    Raises:
+    TypeError: Si les types des paramètres ne sont pas corrects.
+    ValueError: Si les valeurs des paramètres ne sont pas correctes.
+
+    Returns:
+    None
+    """
 
     # Mapping horizon to shape
-    horizon_mapping = {1: 12, 5: 60, 30: 90, 60: 120, 300: 190}
+    horizon_mapping = {1: 12, 5: 60, 30: 300, 60: 400, 300: 500}
 
     # Vérification des paramètres : 
     if not isinstance(df, DataFrame):
@@ -201,12 +254,10 @@ def preprocesser_les_donnees(preprocess_dir : str, df: DataFrame, horizon=5,
     if not isinstance(preprocess_dir, str):
         raise TypeError("preprocess_dir doit être une chaîne de caractères.")
 
-
     if horizon not in horizon_mapping:
-        raise ValueError("Horizon doit valoir 1, 5, 10, 60 ou 300")
+        raise ValueError("Horizon doit valoir 1, 5, 30, 60 ou 300")
     shape = horizon_mapping[horizon]
     size = shape+horizon
-
 
     if split > 1 or split <= 0:
         raise ValueError("Le split doit etre compris entre 0 et 1")

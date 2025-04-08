@@ -4,6 +4,7 @@ import numpy as np
 import argparse
 import os
 
+from Preprocessing_train import check_similarity
 
 
 ## Preprocess de données predict 
@@ -31,45 +32,34 @@ import os
 
 # Si la taille des données de prédiction est plus grande que celle choisi, couper pour ne garder que les x derniere valeur pour la prédiction 
 
-
-def check_similarity(x_train: pd.DataFrame, x_test: pd.DataFrame,  threshold: float = 50.0) -> None: 
-    """
-    Fonction qui permet de vérifier que x_train et x_test sont différents 
-    Convertir les DataFrames en ensembles de tuples (pour une comparaison rapide)
-
-    """
-    train_set = set(map(tuple, x_train.to_numpy()))
-    test_set = set(map(tuple, x_test.to_numpy()))
-
-    # Trouver les lignes communes
-    common_rows = test_set.intersection(train_set)
-
-    # Calculer le pourcentage de similarité
-    similarity_percentage = (len(common_rows) / len(x_test)) * 100
-
-    print(f"Pourcentage de similarité : {similarity_percentage:.2f}%")
-
-    # Lever une erreur si le seuil est dépassé
-    if similarity_percentage > threshold:
-        raise ValueError(f"Le pourcentage de similarité ({similarity_percentage:.2f}%) dépasse {threshold}% !")
-    pass
-
-
 def check_data(test_data: pd.DataFrame, train_data: pd.DataFrame, horizon: int, preprocess_dir : str) -> bool:
     """
     Vérifie l'intégrité des données de test.
-    :param test_data: DataFrame avec les colonnes 'Time' et 'debit'
-    :param train_data: DataFrame avec les colonnes 'Time' et 'debit'
-    :param horizon: Nombre d'inputs attendu
-    :param preprocess_dir : Endroit où sauvegarder les données de test
-    :return: True si toutes les vérifications passent, sinon une exception est levée
+        
+    Cette fonction réalise plusieurs vérifications pour s'assurer que les données de test sont valides. 
+    Les étapes incluent la vérification des types de données, la continuité des timestamps, 
+    et la comparaison avec les données d'entraînement pour éviter toute similarité excessive.
+
+    Parameters:
+    test_data (DataFrame): DataFrame contenant les données de test avec les colonnes 'Time' et 'debit'.
+    train_data (DataFrame): DataFrame contenant les données d'entraînement avec les colonnes 'Time' et 'debit'.
+    horizon (int): Nombre d'inputs attendu.
+    preprocess_dir (str): Répertoire où sauvegarder les données de test préprocessées.
+
+    Returns:
+    bool: True si toutes les vérifications passent, sinon une exception est levée.
+
+    Raises:
+    ValueError: Si les données ne sont pas valides.
+    TypeError: Si les types des paramètres ne sont pas corrects.
+   
     """
 
     # Mapping horizon to shape
-    horizon_mapping = {1: 12, 5: 60, 30: 90, 60: 120, 300: 190}
+    horizon_mapping = {1: 12, 5: 60, 30: 300, 60: 400, 300: 500}
     shape = horizon_mapping[horizon]
     if horizon not in horizon_mapping:
-        raise ValueError("Horizon doit valoir 1, 5, 10, 60 ou 300")
+        raise ValueError("Horizon doit valoir 1, 5, 30, 60 ou 300")
 
     # Vérification des paramètres : 
     if not isinstance(test_data, pd.DataFrame):

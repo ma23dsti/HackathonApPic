@@ -1,15 +1,75 @@
 import streamlit as st
+import os
+import shutil
 
 # Fonction de dialogue pour la confirmation
 @st.dialog("Confirmer le retour à l'accueil")
 def confirm_reset():
+    """
+    Affiche un dialogue de confirmation pour retourner à l'accueil.
+
+    Cette fonction affiche une boîte de dialogue demandant à l'utilisateur de confirmer s'il souhaite retourner à l'accueil.
+    Si l'utilisateur confirme, toutes les données de la session en cours sont effacées et l'utilisateur est redirigé vers la page d'accueil.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+
     st.write('''Êtes-vous sûr de vouloir retourner à l'accueil ? Toutes les données non sauvegardées seront perdues.
-              \n Pour reprendre là où vous en étiez, fermez ce pop-up.''')
+            \n Les fichiers déposés seront également supprimés localement.
+            \n Pour reprendre là où vous en étiez, fermez ce pop-up.''')
     if st.button("Retourner à l'accueil"):
         st.session_state.clear()
+        clean_results_folder("streamlit_app/resultats/donnees_a_la_volee/")
+        clean_results_folder("streamlit_app/static/donnees/donnees_preprocessees/donnees_a_la_volee/")
         st.switch_page("1_🏠_Accueil.py")
 
+def clean_results_folder(folder_path):
+    """
+    Nettoie le dossier de résultats spécifié en supprimant tous les fichiers et dossiers qu'il contient.
+
+    Cette fonction vérifie si le dossier de résultats existe, puis supprime tous les fichiers et sous-dossiers qu'il contient.
+
+    Parameters:
+    folder_path (str): Chemin du dossier à nettoyer.
+
+    Returns:
+    None
+    """
+
+    # Vérifier si le dossier existe
+    if os.path.exists(folder_path) and os.path.isdir(folder_path):
+        # Loop through all files in the directory and remove them
+        for file_name in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, file_name)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)  # S'il y a un sous dossiers, le supprimer.
+            except Exception as e:
+                print(f"Error deleting {file_path}: {e}")
+        print(f"Tous les fichiers de '{folder_path}' ont été supprimés.")
+    else:
+        print(f"Le dossier '{folder_path}' n'existe pas.")
+
 def display_menu():
+    """
+    Affiche le menu de navigation latéral en fonction de l'état de la session.
+
+    Cette fonction ajoute des liens vers différentes pages de l'application en fonction de l'état de la session stocké dans `st.session_state`.
+    Elle permet également de nettoyer le dossier de résultats et de retourner à l'accueil avec confirmation.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+    
     # Vérifier si 'choix_modele' est initialisé dans st.session_state
     if 'choix_modele' not in st.session_state:
         st.session_state['choix_modele'] = None
@@ -17,10 +77,6 @@ def display_menu():
     # Ajouter un bouton personnalisé pour retour à l'accueil avec confirmation
     if st.sidebar.button("🏠 Accueil", key="home_button"):
         confirm_reset()
-
-    # Plus joli que le bouton mais ca marche pas comme je le souhaite et pas encore trouvé de solution
-    # if st.sidebar.page_link("1_🏠_Accueil.py", label="Accueil", icon="🏠"):
-    #     confirm_reset()
 
 
     # Afficher le menu en fonction de l'état de 'choix_modele'
@@ -47,8 +103,6 @@ def display_menu():
     else:
         # Cas par défaut : afficher uniquement "Accueil"
         st.sidebar.markdown("""---""")
-        st.sidebar.write("**session_state pour debug :**")
-        st.sidebar.write(st.session_state)
     
     st.sidebar.markdown("""---""")
 
@@ -72,10 +126,12 @@ def display_menu():
         user_choices.append(f"**Option sélectionnée :** *{choix_modele_descriptions.get(st.session_state.choix_modele, 'Aucune')}*")
 
     # Afficher la taille de la fenêtre et le nombre de prédictions
-    if 'taille_fenetre' in st.session_state:
-        user_choices.append(f"**Taille de la fenêtre :** *{st.session_state.taille_fenetre}*")
-    if 'nombre_predictions' in st.session_state:
-        user_choices.append(f"**Nombre de prédictions :** *{st.session_state.nombre_predictions}*")
+    if 'taille_fenetre_observee' in st.session_state:
+        user_choices.append(f"**Taille de la fenêtre :** *{st.session_state.taille_fenetre_observee}*")
+    if 'horizon_predictions' in st.session_state:
+        user_choices.append(f"**Nombre de prédictions :** *{st.session_state.horizon_predictions}*")
+    if 'unite_mesure' in st.session_state:
+        user_choices.append(f"**Unité de mesure :** *{st.session_state.unite_mesure}*")
 
     st.sidebar.markdown("\n".join(f"- {choice}" for choice in user_choices))
 
@@ -100,5 +156,5 @@ def display_menu():
 
     
     st.sidebar.markdown("""---""")
-    st.sidebar.write("**session_state pour debug :**")
-    st.sidebar.write(st.session_state)
+    #st.sidebar.write("**session_state pour debug :**")
+    #st.sidebar.write(st.session_state)
