@@ -72,7 +72,7 @@ def show():
                 # Ensure model_charge is not None
                 if not st.session_state.model_charge:
                     # Set default model path
-                    default_model_path = "streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_o60_p5/"
+                    default_model_path = f"streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_o{taille_fenetre_observee}_p{horizon}/"
                     if os.path.isdir(default_model_path):
                         st.session_state.model_charge = default_model_path
                         st.info(f"Aucun modèle chargé. Le modèle par défaut sera utilisé : {default_model_path}")
@@ -100,7 +100,7 @@ def show():
                         print(f"Copié : {fichier} → {chemin_destination}")
                     else:
                         print(f"Fichier introuvable : {chemin_source}")
-
+            st.write(prediction_data_reshaped)
             predictions = predire_le_traffic(prediction_data_reshaped)
             st.success(" Prédiction effectuée avec succès.", icon="✅")
 
