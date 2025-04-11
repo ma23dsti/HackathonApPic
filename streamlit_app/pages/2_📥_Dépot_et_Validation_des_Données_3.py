@@ -2,6 +2,7 @@ import os
 import streamlit as st
 import numpy as np
 import pandas as pd
+import json
 from menu import display_menu
 from dependency_manager import check_dependencies
 from utilitaires.mise_page import afficher_bandeau_titre
@@ -44,13 +45,13 @@ def show():
 
     st.markdown("#### Modèle pour la prédiction")   # ajout Claire
 
-    
-
         # Field to select a folder (mandatory)
     if "model_charge" not in st.session_state:
         st.session_state.model_charge = None
 
     st.write("Entrez le chemin du dossier contenant le modèle :")
+
+    fichiers_modele = ["modele.pth", "modele_parametres.json", "x_scaler.pkl", "y_scaler.pkl"]
 
     # Text input for folder path
     folder_path_input = st.text_input(
@@ -62,6 +63,33 @@ def show():
     # Update the session state only if the input changes
     if folder_path_input and folder_path_input != st.session_state.get('model_charge', ""):
         if os.path.isdir(folder_path_input):
+            missing_files = [f for f in fichiers_modele if not os.path.isfile(os.path.join(folder_path_input, f))]
+            if missing_files:
+                st.error(f"Erreur : Le dossier spécifié est invalide. Les fichiers suivants sont manquants : {', '.join(missing_files)}")
+                return
+
+            # Load and validate model parameters
+            param_file_path = os.path.join(folder_path_input, "modele_parametres.json")
+            try:
+                with open(param_file_path, "r") as f:
+                    params = json.load(f)
+                loaded_input_size = params["input_size"]
+                loaded_hidden_size = params["hidden_size"]
+                loaded_output_size = params["output_size"]
+
+                if loaded_input_size != taille_fenetre_observee:
+                    st.error(f"Erreur : input_size attendu ({taille_fenetre_observee}) ne correspond pas à celui du modèle ({loaded_input_size}). Fichier : {param_file_path}")
+                    return
+                if loaded_hidden_size != 800:
+                    st.error(f"Erreur : hidden_size attendu (800) ne correspond pas à celui du modèle ({loaded_hidden_size}). Fichier : {param_file_path}")
+                    return
+                if loaded_output_size != horizon:
+                    st.error(f"Erreur : output_size attendu ({horizon}) ne correspond pas à celui du modèle ({loaded_output_size}). Fichier : {param_file_path}")
+                    return
+            except Exception as e:
+                st.error(f"Erreur lors de la lecture ou de la validation de {param_file_path} : {e}")
+                return
+
             st.session_state['model_charge'] = folder_path_input
         else:
             st.error("Erreur : Le chemin du dossier spécifié n'existe pas ou n'est pas un dossier.")
@@ -69,8 +97,12 @@ def show():
 
     # Set default model path if no folder is entered and no value is stored
     if not st.session_state.get('model_charge'):
-        default_model_path = "streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_o60_p5/"
+        default_model_path = f"streamlit_app/static/modeles/modele_par_defaut/modele_par_defaut_o{taille_fenetre_observee}_p{horizon}/"
         if os.path.isdir(default_model_path):
+            missing_files = [f for f in fichiers_modele if not os.path.isfile(os.path.join(default_model_path, f))]
+            if missing_files:
+                st.error(f"Erreur : Le modèle par défaut est invalide. Les fichiers suivants sont manquants : {', '.join(missing_files)}")
+                return
             st.session_state['model_charge'] = default_model_path
             st.info(f"Aucun modèle spécifié. Le modèle par défaut sera utilisé : {default_model_path}")
         else:

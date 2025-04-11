@@ -70,12 +70,8 @@ def predire_le_traffic(donnees_observees):
     pred_model_loaded = loaded_y_scaler.inverse_transform(pred_model_loaded).astype(int)
 
     # Replace all negative values with zero
-    pred_model_loaded = np.where(pred_model_loaded < 0, 0, pred_model_loaded)*random.uniform(0.5, 1.5)
-
-    # Dummy different models predictions
-    # Generate random multipliers for each element
-    random_multipliers = np.random.uniform(0.5, 1.5, size=pred_model_loaded.shape)
-    pred_model_loaded = pred_model_loaded * random_multipliers
+    pred_model_loaded = np.where(pred_model_loaded < 0, 0, pred_model_loaded)
+    ###pred_model_loaded = np.where(pred_model_loaded < 0, 0, pred_model_loaded)*random.uniform(0.5, 1.5)
 
     print("Prediction terminée")
 
